@@ -4,10 +4,12 @@ Core* Core::m_instance;
 
 Core::Core() {
 	this->m_hwnd = NULL;
+	this->m_renderer = nullptr;
 }
 
 void Core::Init() {
-
+	this->m_renderer = new D3D12();
+	m_renderer->Init(this->m_hwnd);
 }
 
 void Core::SetHWND(HWND& hwnd) {
