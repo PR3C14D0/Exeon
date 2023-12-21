@@ -14,4 +14,6 @@ public:
 	void SetHWND(HWND& hwnd);
 
 	static Core* GetInstance();
+	
+	void MainLoop();
 };

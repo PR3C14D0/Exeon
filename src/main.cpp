@@ -32,6 +32,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ShowWindow(hwnd, nShowCmd);
 
 	Core* core = Core::GetInstance();
+	core->SetHWND(hwnd);
 	
 	MSG msg = { };
 
@@ -40,6 +41,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+		core->MainLoop();
 	}
 
 	return FALSE;
