@@ -3,9 +3,15 @@
 #
 
 # Agregue un origen al ejecutable de este proyecto.
-add_executable (Exeon  "main.cpp")
+add_executable (Exeon  "main.cpp"   "public/Core/Core.h" "private/Core/Core.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Exeon PROPERTY CXX_STANDARD 20)
   set_property(TARGET Exeon PROPERTY WIN32_EXECUTABLE TRUE)
 endif()
+
+set("PRIVATE_INCLUDE" "${CMAKE_CURRENT_SOURCE_DIR}/public")
+set("PUBLIC_INCLUDE" "${CMAKE_CURRENT_SOURCE_DIR}/../include")
+
+target_include_directories(Exeon PRIVATE "${PRIVATE_INCLUDE}")
+target_include_directories(Exeon PUBLIC "${PUBLIC_INCLUDE}")
