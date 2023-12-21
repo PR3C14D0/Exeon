@@ -3,11 +3,15 @@
 Core* Core::m_instance;
 
 Core::Core() {
-
+	this->m_hwnd = NULL;
 }
 
 void Core::Init() {
 
+}
+
+void Core::SetHWND(HWND& hwnd) {
+	this->m_hwnd = hwnd;
 }
 
 Core* Core::GetInstance() {
