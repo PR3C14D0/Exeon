@@ -34,6 +34,22 @@ void D3D12::Init(HWND hwnd) {
 	ThrowIfFailed(this->m_dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, this->m_alloc.Get(), nullptr, IID_PPV_ARGS(this->m_list.GetAddressOf())));
 
 	DXGI_SWAP_CHAIN_DESC1 scDesc = { };
+	scDesc.Width = this->m_nWidth;
+	scDesc.Height = this->m_nHeight;
+	scDesc.BufferCount = 2;
+	scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	scDesc.SampleDesc.Count = 1;
+	scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	scDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+	ThrowIfFailed(this->m_factory->CreateSwapChainForHwnd(
+		this->m_queue.Get(),
+		this->m_hwnd,
+		&scDesc,
+		nullptr,
+		nullptr,
+		this->m_sc.GetAddressOf()
+	));
 }
 
 void D3D12::Update() {
