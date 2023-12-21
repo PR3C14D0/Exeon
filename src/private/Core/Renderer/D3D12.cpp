@@ -23,7 +23,6 @@ void D3D12::Init(HWND hwnd) {
 	D3D_FEATURE_LEVEL maxFeatureLevel = this->GetMaxFeatureLevel();
 
 	ThrowIfFailed(D3D12CreateDevice(this->m_adapter.Get(), maxFeatureLevel, IID_PPV_ARGS(this->m_dev.GetAddressOf())));
-	ThrowIfFailed(this->m_dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(this->m_alloc.GetAddressOf())));
 	
 	D3D12_COMMAND_QUEUE_DESC queueDesc = { };
 	queueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
@@ -31,6 +30,8 @@ void D3D12::Init(HWND hwnd) {
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
 	ThrowIfFailed(this->m_dev->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(this->m_queue.GetAddressOf())));
+	ThrowIfFailed(this->m_dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(this->m_alloc.GetAddressOf())));
+	ThrowIfFailed(this->m_dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, this->m_alloc.Get(), nullptr, IID_PPV_ARGS(this->m_list.GetAddressOf())));
 
 	DXGI_SWAP_CHAIN_DESC1 scDesc = { };
 }
