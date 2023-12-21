@@ -7,13 +7,12 @@
 
 using namespace Microsoft::WRL;
 
-#define safe_release(p) { if( (p) ) { (p)->Release(); (p) = nullptr; } }
-
 class D3D12 : public Renderer {
 private:
 	ComPtr<IDXGIFactory4> m_factory;
 	ComPtr<IDXGIAdapter1> m_adapter;
 
+	ComPtr<ID3D12Device1> m_dev;
 	ComPtr<IDXGISwapChain1> m_sc;
 
 	void GetMostCapableAdapter();

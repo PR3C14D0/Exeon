@@ -20,6 +20,9 @@ void D3D12::Init(HWND hwnd) {
 	ThrowIfFailed(CreateDXGIFactory2(nFactoryFlags, IID_PPV_ARGS(this->m_factory.GetAddressOf())));
 
 	this->GetMostCapableAdapter();
+	D3D_FEATURE_LEVEL maxFeatureLevel = this->GetMaxFeatureLevel();
+
+	ThrowIfFailed(D3D12CreateDevice(this->m_adapter.Get(), maxFeatureLevel, IID_PPV_ARGS(this->m_dev.GetAddressOf())));
 
 	DXGI_SWAP_CHAIN_DESC1 scDesc = { };
 }
@@ -46,8 +49,6 @@ void D3D12::GetMostCapableAdapter() {
 			this->m_adapter = adapter;
 		}
 	}
-
-	safe_release(tempDevice);
 
 	return;
 }
@@ -77,8 +78,6 @@ D3D_FEATURE_LEVEL D3D12::GetMaxFeatureLevel() {
 	featureData.pFeatureLevelsRequested = featureLevels;
 
 	ThrowIfFailed(tempDevice->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featureData, sizeof(featureData)));
-
-	safe_release(tempDevice);
 
 	return featureData.MaxSupportedFeatureLevel;
 }
