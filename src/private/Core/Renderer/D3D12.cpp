@@ -19,6 +19,8 @@ void D3D12::Init(HWND hwnd) {
 
 	ThrowIfFailed(CreateDXGIFactory2(nFactoryFlags, IID_PPV_ARGS(this->m_factory.GetAddressOf())));
 
+	this->GetMostCapableAdapter();
+
 	DXGI_SWAP_CHAIN_DESC1 scDesc = { };
 }
 
@@ -45,8 +47,38 @@ void D3D12::GetMostCapableAdapter() {
 		}
 	}
 
-	if (tempDevice != nullptr)
-		tempDevice->Release();
+	safe_release(tempDevice);
 
 	return;
+}
+
+D3D_FEATURE_LEVEL D3D12::GetMaxFeatureLevel() {
+	D3D_FEATURE_LEVEL featureLevels[] = {
+		D3D_FEATURE_LEVEL_11_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_12_1,
+		D3D_FEATURE_LEVEL_12_2
+	};
+
+	D3D_FEATURE_LEVEL minFeatureLevel = featureLevels[0];
+
+	ComPtr<ID3D12Device> tempDevice;
+	ThrowIfFailed(
+		D3D12CreateDevice(
+			this->m_adapter.Get(),
+			minFeatureLevel,
+			IID_PPV_ARGS(tempDevice.GetAddressOf())
+		)
+	);
+
+	D3D12_FEATURE_DATA_FEATURE_LEVELS featureData = { };
+	featureData.NumFeatureLevels = _countof(featureLevels);
+	featureData.pFeatureLevelsRequested = featureLevels;
+
+	ThrowIfFailed(tempDevice->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS, &featureData, sizeof(featureData)));
+
+	safe_release(tempDevice);
+
+	return featureData.MaxSupportedFeatureLevel;
 }
