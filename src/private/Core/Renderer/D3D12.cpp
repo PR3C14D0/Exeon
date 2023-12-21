@@ -25,6 +25,28 @@ void D3D12::Init(HWND hwnd) {
 void D3D12::Update() {
 	Renderer::Update();
 }
-void D3D12::GetMostCapableAdapter(ComPtr<IDXGIAdapter>& adapter) {
 
+void D3D12::GetMostCapableAdapter() {
+	std::vector<ComPtr<IDXGIAdapter1>> adapters;
+	{
+		ComPtr<IDXGIAdapter1> adapter;
+		for (int i = 0; this->m_factory->EnumAdapters1(i, adapter.GetAddressOf()) != DXGI_ERROR_NOT_FOUND; i++) {
+			adapters.push_back(adapter);
+		}
+	}
+
+	ComPtr<ID3D12Device> tempDevice;
+	for (ComPtr<IDXGIAdapter1> adapter : adapters) {
+		if (SUCCEEDED(D3D12CreateDevice(adapter.Get(),
+			D3D_FEATURE_LEVEL_11_0, 
+			IID_PPV_ARGS(tempDevice.GetAddressOf()
+			)))) {
+			this->m_adapter = adapter;
+		}
+	}
+
+	if (tempDevice != nullptr)
+		tempDevice->Release();
+
+	return;
 }
