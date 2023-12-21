@@ -33,6 +33,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	Core* core = Core::GetInstance();
 	core->SetHWND(hwnd);
+
+	core->Init();
 	
 	MSG msg = { };
 

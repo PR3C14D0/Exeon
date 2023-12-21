@@ -10,7 +10,7 @@ void D3D12::Init(HWND hwnd) {
 	UINT nFactoryFlags = 0;
 #ifndef NDEBUG
 	nFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-	ComPtr<ID3D12Debug6> debug;
+	ComPtr<ID3D12Debug1> debug;
 	ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(debug.GetAddressOf())));
 
 	debug->EnableDebugLayer();
