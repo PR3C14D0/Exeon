@@ -13,6 +13,10 @@ private:
 	ComPtr<IDXGIAdapter1> m_adapter;
 
 	ComPtr<ID3D12Device1> m_dev;
+	ComPtr<ID3D12CommandQueue> m_queue;
+	ComPtr<ID3D12GraphicsCommandList> m_list;
+	ComPtr<ID3D12CommandAllocator> m_alloc;
+
 	ComPtr<IDXGISwapChain1> m_sc;
 
 	void GetMostCapableAdapter();

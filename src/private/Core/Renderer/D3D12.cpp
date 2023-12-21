@@ -24,6 +24,8 @@ void D3D12::Init(HWND hwnd) {
 
 	ThrowIfFailed(D3D12CreateDevice(this->m_adapter.Get(), maxFeatureLevel, IID_PPV_ARGS(this->m_dev.GetAddressOf())));
 
+	ThrowIfFailed(this->m_dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(this->m_alloc.GetAddressOf())));
+
 	DXGI_SWAP_CHAIN_DESC1 scDesc = { };
 }
 
