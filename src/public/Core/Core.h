@@ -20,4 +20,6 @@ public:
 	static Core* GetInstance();
 	
 	void MainLoop();
+
+	Renderer* GetRenderer();
 };

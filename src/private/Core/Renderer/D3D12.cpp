@@ -106,3 +106,7 @@ D3D_FEATURE_LEVEL D3D12::GetMaxFeatureLevel() {
 
 	return featureData.MaxSupportedFeatureLevel;
 }
+
+void D3D12::GetDevice(ComPtr<ID3D12Device1>& dev) {
+	this->m_dev.CopyTo(&dev);
+}

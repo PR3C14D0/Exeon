@@ -25,3 +25,7 @@ Core* Core::GetInstance() {
 		Core::m_instance = new Core();
 	return Core::m_instance;
 }
+
+Renderer* Core::GetRenderer() {
+	return this->m_renderer;
+}

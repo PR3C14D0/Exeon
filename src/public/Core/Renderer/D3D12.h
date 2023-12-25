@@ -4,6 +4,7 @@
 #include <wrl.h>
 #include "Util.h"
 #include <vector>
+#include "Core/Renderer/DescriptorHeap.h"
 
 using namespace Microsoft::WRL;
 
@@ -27,4 +28,6 @@ public:
 	
 	void Init(HWND hwnd) override;
 	void Update() override;
+
+	void GetDevice(ComPtr<ID3D12Device1>& dev);
 };
