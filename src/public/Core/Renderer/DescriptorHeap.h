@@ -18,6 +18,9 @@ private:
 
 	bool m_bShaderVisible;
 
+	D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHandle;
+	D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHandle;
+
 	UINT m_nIncrement;
 public:
 	DescriptorHeap(UINT nDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE type, bool bShaderVisible);

@@ -19,6 +19,8 @@ DescriptorHeap::DescriptorHeap(UINT nDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE typ
 		ThrowIfFailed(this->m_dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(this->m_heap.GetAddressOf())));
 
 		this->m_nIncrement = this->m_dev->GetDescriptorHandleIncrementSize(type);
+		this->m_cpuHandle = this->m_heap->GetCPUDescriptorHandleForHeapStart();
+		this->m_gpuHandle = this->m_heap->GetGPUDescriptorHandleForHeapStart();
 	}
 }
 
@@ -38,12 +40,18 @@ void DescriptorHeap::Allocate(UINT nDescriptors) {
 		heap->Release();
 
 		this->m_nIncrement = this->m_dev->GetDescriptorHandleIncrementSize(heapDesc.Type);
+		this->m_cpuHandle = this->m_heap->GetCPUDescriptorHandleForHeapStart();
+		this->m_gpuHandle = this->m_heap->GetGPUDescriptorHandleForHeapStart();
 	}
 }
 
 Descriptor DescriptorHeap::GetDescriptor(UINT nIndex) {
-	return {
-		this->m_heap->GetCPUDescriptorHandleForHeapStart().ptr + (nIndex)*this->m_nIncrement,
-		this->m_heap->GetGPUDescriptorHandleForHeapStart().ptr + (nIndex)*this->m_nIncrement,
-	};
+	SIZE_T pCPU = this->m_cpuHandle.ptr;
+	SIZE_T pGPU = this->m_gpuHandle.ptr;
+
+	pCPU += nIndex * this->m_nIncrement;
+	pGPU += nIndex * this->m_nIncrement;
+
+	Descriptor retDesc{ pCPU, pGPU };
+	return retDesc;
 }
