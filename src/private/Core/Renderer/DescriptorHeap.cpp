@@ -17,6 +17,8 @@ DescriptorHeap::DescriptorHeap(UINT nDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE typ
 		renderer->GetDevice(this->m_dev);
 
 		ThrowIfFailed(this->m_dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(this->m_heap.GetAddressOf())));
+
+		this->m_nIncrement = this->m_dev->GetDescriptorHandleIncrementSize(type);
 	}
 }
 
@@ -34,5 +36,14 @@ void DescriptorHeap::Allocate(UINT nDescriptors) {
 
 		this->m_heap.Swap(heap);
 		heap->Release();
+
+		this->m_nIncrement = this->m_dev->GetDescriptorHandleIncrementSize(heapDesc.Type);
 	}
+}
+
+Descriptor DescriptorHeap::GetDescriptor(UINT nIndex) {
+	return {
+		this->m_heap->GetCPUDescriptorHandleForHeapStart().ptr + (nIndex)*this->m_nIncrement,
+		this->m_heap->GetGPUDescriptorHandleForHeapStart().ptr + (nIndex)*this->m_nIncrement,
+	};
 }
