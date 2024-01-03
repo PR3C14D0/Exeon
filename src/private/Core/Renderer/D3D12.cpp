@@ -1,7 +1,7 @@
 #include "Core/Renderer/D3D12.h"
 
 D3D12::D3D12() : Renderer::Renderer() {
-	
+	this->m_nBackBuffers = 2;
 }
 
 void D3D12::Init(HWND hwnd) {
@@ -36,7 +36,7 @@ void D3D12::Init(HWND hwnd) {
 	DXGI_SWAP_CHAIN_DESC1 scDesc = { };
 	scDesc.Width = this->m_nWidth;
 	scDesc.Height = this->m_nHeight;
-	scDesc.BufferCount = 2;
+	scDesc.BufferCount = this->m_nBackBuffers;
 	scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scDesc.SampleDesc.Count = 1;
 	scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -50,6 +50,18 @@ void D3D12::Init(HWND hwnd) {
 		nullptr,
 		this->m_sc.GetAddressOf()
 	));
+
+	this->m_rtvHeap = new DescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false);
+
+	for (int i = 0; i < this->m_nBackBuffers; i++) {
+		ComPtr<ID3D12Resource> buff;
+		ThrowIfFailed(this->m_sc->GetBuffer(i, IID_PPV_ARGS(buff.GetAddressOf())));
+
+		this->m_backBuffers.push_back(buff);
+
+		Descriptor rtv = this->m_rtvHeap->GetDescriptor(i);
+		this->m_dev->CreateRenderTargetView(buff.Get(), nullptr, rtv.cpuHandle);
+	}
 }
 
 void D3D12::Update() {

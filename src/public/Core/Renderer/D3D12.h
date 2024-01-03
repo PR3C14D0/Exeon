@@ -20,9 +20,16 @@ private:
 
 	ComPtr<IDXGISwapChain1> m_sc;
 
+	std::vector<ComPtr<ID3D12Resource>> m_backBuffers;
+
 	void GetMostCapableAdapter();
 
 	D3D_FEATURE_LEVEL GetMaxFeatureLevel();
+
+	DescriptorHeap* m_rtvHeap;
+
+	UINT m_nBackBuffers;
+
 public:
 	D3D12();
 	
