@@ -17,7 +17,7 @@ void Core::SetHWND(HWND& hwnd) {
 }
 
 void Core::MainLoop() {
-
+	this->m_renderer->Update();
 }
 
 Core* Core::GetInstance() {

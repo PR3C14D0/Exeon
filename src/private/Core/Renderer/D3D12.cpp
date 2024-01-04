@@ -2,6 +2,8 @@
 
 D3D12::D3D12() : Renderer::Renderer() {
 	this->m_nBackBuffers = 2;
+	this->m_nCurrentFence = 0;
+	this->m_hFence = NULL;
 }
 
 void D3D12::Init(HWND hwnd) {
@@ -33,6 +35,8 @@ void D3D12::Init(HWND hwnd) {
 	ThrowIfFailed(this->m_dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(this->m_alloc.GetAddressOf())));
 	ThrowIfFailed(this->m_dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, this->m_alloc.Get(), nullptr, IID_PPV_ARGS(this->m_list.GetAddressOf())));
 
+	ThrowIfFailed(this->m_list->Close());
+
 	DXGI_SWAP_CHAIN_DESC1 scDesc = { };
 	scDesc.Width = this->m_nWidth;
 	scDesc.Height = this->m_nHeight;
@@ -41,15 +45,19 @@ void D3D12::Init(HWND hwnd) {
 	scDesc.SampleDesc.Count = 1;
 	scDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	scDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	{
+		ComPtr<IDXGISwapChain1> tempSc;
+		ThrowIfFailed(this->m_factory->CreateSwapChainForHwnd(
+			this->m_queue.Get(),
+			this->m_hwnd,
+			&scDesc,
+			nullptr,
+			nullptr,
+			tempSc.GetAddressOf()
+		));
 
-	ThrowIfFailed(this->m_factory->CreateSwapChainForHwnd(
-		this->m_queue.Get(),
-		this->m_hwnd,
-		&scDesc,
-		nullptr,
-		nullptr,
-		this->m_sc.GetAddressOf()
-	));
+		tempSc.As(&this->m_sc);
+	}
 
 	this->m_rtvHeap = new DescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false);
 
@@ -61,11 +69,51 @@ void D3D12::Init(HWND hwnd) {
 
 		Descriptor rtv = this->m_rtvHeap->GetDescriptor(i);
 		this->m_dev->CreateRenderTargetView(buff.Get(), nullptr, rtv.cpuHandle);
+		buff->SetName(L"Back Buffer");
 	}
+
+	this->m_nActualBackBuffer = this->m_sc->GetCurrentBackBufferIndex();
+
+	ThrowIfFailed(this->m_dev->CreateFence(this->m_nCurrentFence, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(this->m_fence.GetAddressOf())));
+	this->m_nCurrentFence++;
 }
 
 void D3D12::Update() {
 	Renderer::Update();
+	ThrowIfFailed(this->m_alloc->Reset());
+	ThrowIfFailed(this->m_list->Reset(this->m_alloc.Get(), nullptr));
+
+	Descriptor rtv = this->m_rtvHeap->GetDescriptor(this->m_nActualBackBuffer);
+	this->m_list->OMSetRenderTargets(1, &rtv.cpuHandle, FALSE, nullptr);
+	this->m_list->ClearRenderTargetView(rtv.cpuHandle, RGBA { 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
+
+	ThrowIfFailed(this->m_list->Close());
+
+	ID3D12CommandList* commandLists[] = {
+		this->m_list.Get()
+	};
+
+	this->m_queue->ExecuteCommandLists(_countof(commandLists), commandLists);
+
+	this->m_sc->Present(0, 0);
+	this->m_nActualBackBuffer = this->m_sc->GetCurrentBackBufferIndex();
+
+	this->WaitFrame();
+}
+
+void D3D12::WaitFrame() {
+	UINT nFence = this->m_nCurrentFence;
+	this->m_nCurrentFence++;
+
+	this->m_queue->Signal(this->m_fence.Get(), nFence);
+
+	if (nFence > this->m_fence->GetCompletedValue()) {
+		this->m_hFence = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+		ThrowIfFailed(this->m_fence->SetEventOnCompletion(nFence, this->m_hFence));
+		WaitForSingleObject(this->m_hFence, INFINITE);
+	}
+
+	return;
 }
 
 void D3D12::GetMostCapableAdapter() {

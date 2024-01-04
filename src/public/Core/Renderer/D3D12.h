@@ -18,13 +18,20 @@ private:
 	ComPtr<ID3D12GraphicsCommandList> m_list;
 	ComPtr<ID3D12CommandAllocator> m_alloc;
 
-	ComPtr<IDXGISwapChain1> m_sc;
+	ComPtr<IDXGISwapChain3> m_sc;
 
 	std::vector<ComPtr<ID3D12Resource>> m_backBuffers;
+
+	UINT m_nActualBackBuffer;
 
 	void GetMostCapableAdapter();
 
 	D3D_FEATURE_LEVEL GetMaxFeatureLevel();
+
+	ComPtr<ID3D12Fence> m_fence;
+	UINT m_nCurrentFence;
+	HANDLE m_hFence;
+	void WaitFrame();
 
 	DescriptorHeap* m_rtvHeap;
 
