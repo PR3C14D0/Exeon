@@ -61,5 +61,5 @@ public:
 	void GetDevice(ComPtr<ID3D12Device1>& dev);
 	void GetCommandList(ComPtr<ID3D12GraphicsCommandList>& list);
 
-	void CreateVertexBuffer(std::vector<Vertex> vertices, ComPtr<ID3D12Resource>& resource);
+	void CreateBuffer(void* pData, UINT nLength, ComPtr<ID3D12Resource>& resource);
 };
