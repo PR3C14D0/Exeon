@@ -183,6 +183,34 @@ void D3D12::ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STAT
 	return;
 }
 
+void D3D12::CreateVertexBuffer(std::vector<Vertex> vertices, ComPtr<ID3D12Resource>& resource) {
+	D3D12_RESOURCE_DESC buffDesc = { };
+	buffDesc.DepthOrArraySize = 1;
+	buffDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	buffDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	buffDesc.Height = 1;
+	buffDesc.Width = vertices.size() * sizeof(Vertex);
+
+	D3D12_HEAP_PROPERTIES heapProps = { };
+	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+	ThrowIfFailed(this->m_dev->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&buffDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(resource.GetAddressOf())
+	));
+
+	PVOID pMap = nullptr;
+	resource->Map(0, nullptr, &pMap);
+	memcpy(pMap, &vertices[0], vertices.size() * sizeof(Vertex));
+	resource->Unmap(0, nullptr);
+
+	return;
+}
+
 void D3D12::GetMostCapableAdapter() {
 	std::vector<ComPtr<IDXGIAdapter1>> adapters;
 	{
