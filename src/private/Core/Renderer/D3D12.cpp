@@ -114,6 +114,7 @@ void D3D12::InitDepth() {
 		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		&dsvClear,
 		IID_PPV_ARGS(this->m_depthBuffer.GetAddressOf())));
+	this->m_depthBuffer->SetName(L"Depth buffer");
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = { };
 	dsvDesc.Format = depthBuffDesc.Format;
@@ -125,8 +126,6 @@ void D3D12::InitDepth() {
 		&dsvDesc,
 		dsv.cpuHandle
 	);
-
-	this->m_depthBuffer->SetName(L"Depth buffer");
 }
 
 void D3D12::Update() {
@@ -140,7 +139,8 @@ void D3D12::Update() {
 	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	Descriptor rtv = this->m_rtvHeap->GetDescriptor(this->m_nActualBackBuffer);
-	this->m_list->OMSetRenderTargets(1, &rtv.cpuHandle, FALSE, nullptr);
+	Descriptor dsv = this->m_dsvHeap->GetDescriptor(0);
+	this->m_list->OMSetRenderTargets(1, &rtv.cpuHandle, FALSE, &dsv.cpuHandle);
 	this->m_list->ClearRenderTargetView(rtv.cpuHandle, RGBA { 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
 
 	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
