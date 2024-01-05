@@ -13,12 +13,16 @@ class D3D12;
 
 class Shader {
 private:
-	void D3D12Shader(D3D12* renderer, const char* shader, const char* vertexShader, const char* pixelShader);
+	void D3D12Shader(const char* shader, const char* vertexShader, const char* pixelShader);
 
-	ComPtr<ID3D12Device1> m_dev;
-	ComPtr<ID3D12GraphicsCommandList> m_list;
 	Renderer* m_renderer;
+
+	LPVOID m_pBuffer;
+	UINT m_nBufferLength;
+
 public:
 	Shader(const char* shader, const char* vertexShader, const char* pixelShader);
 	~Shader() = default;
+
+	UINT GetBuffer(LPVOID& pBuffer);
 };
