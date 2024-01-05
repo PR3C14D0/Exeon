@@ -28,4 +28,6 @@ public:
 	Descriptor GetDescriptor(UINT nIndex);
 
 	void Allocate(UINT nDescriptors);
+
+	UINT GetDescriptorCount();
 };

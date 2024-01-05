@@ -55,3 +55,7 @@ Descriptor DescriptorHeap::GetDescriptor(UINT nIndex) {
 	Descriptor retDesc{ pCPU, pGPU };
 	return retDesc;
 }
+
+UINT DescriptorHeap::GetDescriptorCount() {
+	return this->m_nDescriptors;
+}
