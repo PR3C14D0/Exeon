@@ -91,7 +91,7 @@ void D3D12::InitDepth() {
 
 	D3D12_RESOURCE_DESC depthBuffDesc = { };
 	depthBuffDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthBuffDesc.SampleDesc.Count = 8;
+	depthBuffDesc.SampleDesc.Count = 1;
 	depthBuffDesc.Width = this->m_nWidth;
 	depthBuffDesc.Height = this->m_nHeight;
 	depthBuffDesc.MipLevels = 1;
@@ -133,8 +133,6 @@ void D3D12::Update() {
 	ThrowIfFailed(this->m_alloc->Reset());
 	ThrowIfFailed(this->m_list->Reset(this->m_alloc.Get(), nullptr));
 
-	Shader* tempShader = new Shader("Shader.hlsl", "VertexMain", "PixelMain");
-
 	ComPtr<ID3D12Resource> actualBuffer = this->m_backBuffers[this->m_nActualBackBuffer];
 	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
@@ -155,8 +153,6 @@ void D3D12::Update() {
 
 	this->m_sc->Present(this->m_vsyncState, 0);
 	this->m_nActualBackBuffer = this->m_sc->GetCurrentBackBufferIndex();
-
-	this->WaitFrame();
 }
 
 void D3D12::WaitFrame() {
