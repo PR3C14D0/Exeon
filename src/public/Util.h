@@ -3,6 +3,13 @@
 #include <Windows.h>
 
 typedef float RGBA[4];
+typedef float RGB[3];
+typedef float RG[2];
+
+struct Vertex {
+	RGB xyz;
+	RG uv;
+};
 
 inline void ThrowIfFailed(HRESULT hr) {
 	if (FAILED(hr))
