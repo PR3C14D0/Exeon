@@ -5,6 +5,7 @@
 #include "Util.h"
 #include <vector>
 #include "Core/Renderer/DescriptorHeap.h"
+#include "Core/Renderer/Shader.h"
 
 using namespace Microsoft::WRL;
 
@@ -54,4 +55,5 @@ public:
 	void Update() override;
 
 	void GetDevice(ComPtr<ID3D12Device1>& dev);
+	void GetCommandList(ComPtr<ID3D12GraphicsCommandList>& list);
 };

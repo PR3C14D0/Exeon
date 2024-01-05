@@ -86,6 +86,8 @@ void D3D12::Update() {
 	ThrowIfFailed(this->m_alloc->Reset());
 	ThrowIfFailed(this->m_list->Reset(this->m_alloc.Get(), nullptr));
 
+	Shader* tempShader = new Shader("Shader.hlsl", "VertexMain", "PixelMain");
+
 	ComPtr<ID3D12Resource> actualBuffer = this->m_backBuffers[this->m_nActualBackBuffer];
 	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
@@ -190,4 +192,8 @@ D3D_FEATURE_LEVEL D3D12::GetMaxFeatureLevel() {
 
 void D3D12::GetDevice(ComPtr<ID3D12Device1>& dev) {
 	this->m_dev.CopyTo(&dev);
+}
+
+void D3D12::GetCommandList(ComPtr<ID3D12GraphicsCommandList>& list) {
+	this->m_list.CopyTo(&list);
 }
