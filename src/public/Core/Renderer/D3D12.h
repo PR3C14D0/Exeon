@@ -8,6 +8,12 @@
 
 using namespace Microsoft::WRL;
 
+enum VSYNC {
+	DISABLED = 0,
+	ENABLED = 1,
+	MEDIUM = 2
+};
+
 class D3D12 : public Renderer {
 private:
 	ComPtr<IDXGIFactory4> m_factory;
@@ -36,6 +42,10 @@ private:
 	DescriptorHeap* m_rtvHeap;
 
 	UINT m_nBackBuffers;
+
+	void ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState);
+
+	VSYNC m_vsyncState;
 
 public:
 	D3D12();

@@ -4,6 +4,7 @@ D3D12::D3D12() : Renderer::Renderer() {
 	this->m_nBackBuffers = 2;
 	this->m_nCurrentFence = 0;
 	this->m_hFence = NULL;
+	this->m_vsyncState = VSYNC::ENABLED;
 }
 
 void D3D12::Init(HWND hwnd) {
@@ -59,6 +60,8 @@ void D3D12::Init(HWND hwnd) {
 		tempSc.As(&this->m_sc);
 	}
 
+	//this->m_sc->SetFullscreenState(TRUE, nullptr);
+
 	this->m_rtvHeap = new DescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false);
 
 	for (int i = 0; i < this->m_nBackBuffers; i++) {
@@ -83,9 +86,14 @@ void D3D12::Update() {
 	ThrowIfFailed(this->m_alloc->Reset());
 	ThrowIfFailed(this->m_list->Reset(this->m_alloc.Get(), nullptr));
 
+	ComPtr<ID3D12Resource> actualBuffer = this->m_backBuffers[this->m_nActualBackBuffer];
+	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
 	Descriptor rtv = this->m_rtvHeap->GetDescriptor(this->m_nActualBackBuffer);
 	this->m_list->OMSetRenderTargets(1, &rtv.cpuHandle, FALSE, nullptr);
 	this->m_list->ClearRenderTargetView(rtv.cpuHandle, RGBA { 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
+
+	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
 	ThrowIfFailed(this->m_list->Close());
 
@@ -95,7 +103,7 @@ void D3D12::Update() {
 
 	this->m_queue->ExecuteCommandLists(_countof(commandLists), commandLists);
 
-	this->m_sc->Present(0, 0);
+	this->m_sc->Present(this->m_vsyncState, 0);
 	this->m_nActualBackBuffer = this->m_sc->GetCurrentBackBufferIndex();
 
 	this->WaitFrame();
@@ -112,6 +120,19 @@ void D3D12::WaitFrame() {
 		ThrowIfFailed(this->m_fence->SetEventOnCompletion(nFence, this->m_hFence));
 		WaitForSingleObject(this->m_hFence, INFINITE);
 	}
+
+	return;
+}
+
+void D3D12::ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState) {
+	D3D12_RESOURCE_BARRIER barrier = { };
+	barrier.Transition.pResource = resource.Get();
+	barrier.Transition.StateBefore = oldState;
+	barrier.Transition.StateAfter = newState;
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+
+	this->m_list->ResourceBarrier(1, &barrier);
 
 	return;
 }
