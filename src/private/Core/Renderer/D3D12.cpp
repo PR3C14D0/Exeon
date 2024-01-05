@@ -79,6 +79,54 @@ void D3D12::Init(HWND hwnd) {
 
 	ThrowIfFailed(this->m_dev->CreateFence(this->m_nCurrentFence, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(this->m_fence.GetAddressOf())));
 	this->m_nCurrentFence++;
+
+	std::cout << "[DEBUG] Initializing Depth buffer" << std::endl;
+	this->InitDepth();
+	std::cout << "[DEBUG] Depth buffer initialized" << std::endl;
+}
+
+void D3D12::InitDepth() {
+	this->m_dsvHeap = new DescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, false);
+	Descriptor dsv = this->m_dsvHeap->GetDescriptor(0);
+
+	D3D12_RESOURCE_DESC depthBuffDesc = { };
+	depthBuffDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthBuffDesc.SampleDesc.Count = 8;
+	depthBuffDesc.Width = this->m_nWidth;
+	depthBuffDesc.Height = this->m_nHeight;
+	depthBuffDesc.MipLevels = 1;
+	depthBuffDesc.DepthOrArraySize = 1;
+	depthBuffDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	depthBuffDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+	D3D12_HEAP_PROPERTIES heapProps = { };
+	heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+	
+	D3D12_CLEAR_VALUE dsvClear = { };
+	dsvClear.Format = depthBuffDesc.Format;
+	dsvClear.DepthStencil.Depth = 1.f;
+	dsvClear.DepthStencil.Depth = 1.f;
+
+	ThrowIfFailed(this->m_dev->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&depthBuffDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&dsvClear,
+		IID_PPV_ARGS(this->m_depthBuffer.GetAddressOf())));
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = { };
+	dsvDesc.Format = depthBuffDesc.Format;
+	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
+	
+	this->m_dev->CreateDepthStencilView(
+		this->m_depthBuffer.Get(),
+		&dsvDesc,
+		dsv.cpuHandle
+	);
+
+	this->m_depthBuffer->SetName(L"Depth buffer");
 }
 
 void D3D12::Update() {

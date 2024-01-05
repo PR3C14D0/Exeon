@@ -28,6 +28,7 @@ private:
 	ComPtr<IDXGISwapChain3> m_sc;
 
 	std::vector<ComPtr<ID3D12Resource>> m_backBuffers;
+	ComPtr<ID3D12Resource> m_depthBuffer;
 
 	UINT m_nActualBackBuffer;
 
@@ -41,12 +42,15 @@ private:
 	void WaitFrame();
 
 	DescriptorHeap* m_rtvHeap;
+	DescriptorHeap* m_dsvHeap;
 
 	UINT m_nBackBuffers;
 
 	void ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState);
 
 	VSYNC m_vsyncState;
+
+	void InitDepth();
 
 public:
 	D3D12();
