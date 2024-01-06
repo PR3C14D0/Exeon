@@ -34,14 +34,14 @@ void DescriptorHeap::Allocate(UINT nDescriptors) {
 		heapDesc.NumDescriptors = this->m_nDescriptors;
 
 		ThrowIfFailed(this->m_dev->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(heap.GetAddressOf())));
-		this->m_dev->CopyDescriptorsSimple(nOldCount, this->m_heap->GetCPUDescriptorHandleForHeapStart(), heap->GetCPUDescriptorHandleForHeapStart(), heapDesc.Type);
+		this->m_dev->CopyDescriptorsSimple(nOldCount, heap->GetCPUDescriptorHandleForHeapStart(), this->m_heap->GetCPUDescriptorHandleForHeapStart(), heapDesc.Type);
+
+		this->m_nIncrement = this->m_dev->GetDescriptorHandleIncrementSize(heapDesc.Type);
+		this->m_cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
+		this->m_gpuHandle = heap->GetGPUDescriptorHandleForHeapStart();
 
 		this->m_heap.Swap(heap);
 		heap->Release();
-
-		this->m_nIncrement = this->m_dev->GetDescriptorHandleIncrementSize(heapDesc.Type);
-		this->m_cpuHandle = this->m_heap->GetCPUDescriptorHandleForHeapStart();
-		this->m_gpuHandle = this->m_heap->GetGPUDescriptorHandleForHeapStart();
 	}
 }
 
