@@ -48,7 +48,7 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 
 	this->m_rtvDescriptor = renderer->m_rtvHeap->GetDescriptor(this->m_nRTVIndex);
 	
-	renderer->CreateTexture(renderer->m_nWidth, renderer->m_nHeight, 8, this->m_rtvBuff);
+	renderer->CreateTexture(renderer->m_nWidth, renderer->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_rtvBuff);
 
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = { };
 	rtvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;

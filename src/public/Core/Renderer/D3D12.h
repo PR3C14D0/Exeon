@@ -50,7 +50,7 @@ private:
 	ComPtr<ID3D12Resource> m_positionBuff;
 
 	UINT m_nAlbedoIndex;
-	UINT m_UVIndex;
+	UINT m_nUVIndex;
 	UINT m_nPositionIndex;
 
 	UINT m_nBackBuffers;
@@ -71,5 +71,5 @@ public:
 	void GetCommandList(ComPtr<ID3D12GraphicsCommandList>& list);
 
 	void CreateBuffer(void* pData, UINT nLength, ComPtr<ID3D12Resource>& resource);
-	void CreateTexture(UINT nWidth, UINT nHeight, UINT nSampleCount, ComPtr<ID3D12Resource>& resource);
+	void CreateTexture(UINT nWidth, UINT nHeight, UINT nSampleCount, D3D12_RESOURCE_FLAGS Flags, ComPtr<ID3D12Resource>& resource);
 };
