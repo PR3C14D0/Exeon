@@ -16,6 +16,7 @@ enum VSYNC {
 };
 
 class D3D12 : public Renderer {
+	friend class ScreenQuad;
 private:
 	ComPtr<IDXGIFactory4> m_factory;
 	ComPtr<IDXGIAdapter1> m_adapter;
@@ -62,4 +63,5 @@ public:
 	void GetCommandList(ComPtr<ID3D12GraphicsCommandList>& list);
 
 	void CreateBuffer(void* pData, UINT nLength, ComPtr<ID3D12Resource>& resource);
+	void CreateTexture(UINT nWidth, UINT nHeight, UINT nSampleCount, ComPtr<ID3D12Resource>& resource);
 };

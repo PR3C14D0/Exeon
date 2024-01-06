@@ -211,6 +211,36 @@ void D3D12::CreateBuffer(void* pData, UINT nLength, ComPtr<ID3D12Resource>& reso
 	return;
 }
 
+void D3D12::CreateTexture(UINT nWidth, UINT nHeight, UINT nSampleCount, ComPtr<ID3D12Resource>& resource) {
+	D3D12_RESOURCE_DESC texDesc = { };
+	texDesc.DepthOrArraySize = 1;
+	texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	texDesc.SampleDesc.Count = nSampleCount;
+	texDesc.Width = nWidth;
+	texDesc.Height = nHeight;
+	texDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	
+	D3D12_HEAP_PROPERTIES heapProps = { };
+	heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	D3D12_CLEAR_VALUE clearValue = { };
+	clearValue.Color[0] = 0.f;
+	clearValue.Color[1] = 0.f;
+	clearValue.Color[2] = 0.f;
+	clearValue.Color[3] = 1.f;
+	clearValue.Format = texDesc.Format;
+
+	ThrowIfFailed(this->m_dev->CreateCommittedResource(
+		&heapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&texDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		&clearValue,
+		IID_PPV_ARGS(resource.GetAddressOf())
+	));
+}
+
 void D3D12::GetMostCapableAdapter() {
 	std::vector<ComPtr<IDXGIAdapter1>> adapters;
 	{

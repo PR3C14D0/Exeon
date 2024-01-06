@@ -5,6 +5,8 @@
 #include <wrl.h>
 #include <vector>
 #include "Util.h"
+#include "Core/Renderer/Descriptor.h"
+#include "Core/Renderer/Shader.h"
 
 using namespace Microsoft::WRL;
 
@@ -31,6 +33,12 @@ private:
 
 	ComPtr<ID3D12Device1> m_dev;
 	ComPtr<ID3D12GraphicsCommandList> m_list;
+
+	UINT m_nRTVIndex;
+	Descriptor m_rtvDescriptor;
+	ComPtr<ID3D12Resource> m_rtvBuff;
+	
+	Shader* m_shader;
 public:
 	ScreenQuad();
 	

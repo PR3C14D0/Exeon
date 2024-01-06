@@ -4,6 +4,7 @@
 ScreenQuad::ScreenQuad() {
 	this->m_core = Core::GetInstance();
 	this->m_renderer = nullptr;
+	this->m_shader = nullptr;
 }
 
 void ScreenQuad::Init() {
@@ -41,6 +42,23 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	this->m_IBV.BufferLocation = this->m_IBO->GetGPUVirtualAddress();
 	this->m_IBV.Format = DXGI_FORMAT_R32_UINT;
 	this->m_IBV.SizeInBytes = this->m_indices.size() * sizeof(UINT);
+
+	this->m_nRTVIndex = renderer->m_rtvHeap->GetDescriptorCount();
+	renderer->m_rtvHeap->Allocate(1);
+
+	this->m_rtvDescriptor = renderer->m_rtvHeap->GetDescriptor(this->m_nRTVIndex);
+	
+	renderer->CreateTexture(renderer->m_nWidth, renderer->m_nHeight, 8, this->m_rtvBuff);
+
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = { };
+	rtvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	rtvDesc.Texture2D.MipSlice = 1;
+	rtvDesc.Texture2D.PlaneSlice = 1;
+	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+
+	renderer->m_dev->CreateRenderTargetView(this->m_rtvBuff.Get(), &rtvDesc, this->m_rtvDescriptor.cpuHandle);
+
+	this->m_shader = new Shader("LightPass.hlsl", "VertexMain", "PixelMain");
 }
 
 void ScreenQuad::Render() {
