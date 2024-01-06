@@ -45,6 +45,14 @@ private:
 	DescriptorHeap* m_rtvHeap;
 	DescriptorHeap* m_dsvHeap;
 
+	ComPtr<ID3D12Resource> m_albedoBuff;
+	ComPtr<ID3D12Resource> m_uvBuff;
+	ComPtr<ID3D12Resource> m_positionBuff;
+
+	UINT m_nAlbedoIndex;
+	UINT m_UVIndex;
+	UINT m_nPositionIndex;
+
 	UINT m_nBackBuffers;
 
 	void ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState);

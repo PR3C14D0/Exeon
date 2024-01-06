@@ -5,6 +5,10 @@ D3D12::D3D12() : Renderer::Renderer() {
 	this->m_nCurrentFence = 0;
 	this->m_hFence = NULL;
 	this->m_vsyncState = VSYNC::ENABLED;
+
+	this->m_nAlbedoIndex = 0;
+	this->m_UVIndex = 0;
+	this->m_nPositionIndex = 0;
 }
 
 void D3D12::Init(HWND hwnd) {
@@ -83,6 +87,14 @@ void D3D12::Init(HWND hwnd) {
 	std::cout << "[DEBUG] Initializing Depth buffer" << std::endl;
 	this->InitDepth();
 	std::cout << "[DEBUG] Depth buffer initialized" << std::endl;
+
+	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, this->m_albedoBuff);
+	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, this->m_uvBuff);
+	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, this->m_positionBuff);
+
+	this->m_albedoBuff->SetName(L"Albedo");
+	this->m_uvBuff->SetName(L"UV");
+	this->m_positionBuff->SetName(L"Position");
 }
 
 void D3D12::InitDepth() {
