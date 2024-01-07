@@ -115,6 +115,9 @@ void D3D12::Init(HWND hwnd) {
 	this->m_dev->CreateRenderTargetView(this->m_albedoBuff.Get(), &GBufferDesc, albedoDesc.cpuHandle);
 	this->m_dev->CreateRenderTargetView(this->m_uvBuff.Get(), &GBufferDesc, UVDesc.cpuHandle);
 	this->m_dev->CreateRenderTargetView(this->m_positionBuff.Get(), &GBufferDesc, positionDesc.cpuHandle);
+
+	// We'll allocate 3 for our ScreenQuad.
+	this->m_cbvSrvHeap = new DescriptorHeap(3, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 }
 
 void D3D12::InitDepth() {

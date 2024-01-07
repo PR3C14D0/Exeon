@@ -37,6 +37,8 @@ private:
 	UINT m_nRTVIndex;
 	Descriptor m_rtvDescriptor;
 	ComPtr<ID3D12Resource> m_rtvBuff;
+
+	ComPtr<ID3D12RootSignature> m_rootSig;
 	
 	Shader* m_shader;
 public:

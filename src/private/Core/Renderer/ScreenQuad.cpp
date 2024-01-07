@@ -59,6 +59,34 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	renderer->m_dev->CreateRenderTargetView(this->m_rtvBuff.Get(), &rtvDesc, this->m_rtvDescriptor.cpuHandle);
 
 	this->m_shader = new Shader("LightPass.hlsl", "VertexMain", "PixelMain");
+
+	Descriptor srvDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
+
+	D3D12_DESCRIPTOR_RANGE gbufferRange = { };
+	gbufferRange.NumDescriptors = 3;
+	gbufferRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	gbufferRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	
+	D3D12_ROOT_DESCRIPTOR_TABLE rootTable = { };
+	rootTable.NumDescriptorRanges = 1;
+	rootTable.pDescriptorRanges = &gbufferRange;
+
+	D3D12_ROOT_PARAMETER rootParams = { };
+	rootParams.DescriptorTable = rootTable;
+	rootParams.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParams.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+
+	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
+	rootDesc.NumParameters = 1;
+	rootDesc.pParameters = &rootParams;
+	rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	rootDesc.pStaticSamplers = nullptr;
+	rootDesc.NumStaticSamplers = 0;
+
+	ComPtr<ID3DBlob> rootBlob;
+	ThrowIfFailed(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, rootBlob.GetAddressOf(), nullptr));
+
+	ThrowIfFailed(renderer->m_dev->CreateRootSignature(0, rootBlob->GetBufferPointer(), rootBlob->GetBufferSize(), IID_PPV_ARGS(this->m_rootSig.GetAddressOf())));
 }
 
 void ScreenQuad::Render() {
@@ -68,5 +96,4 @@ void ScreenQuad::Render() {
 } 
 
 void ScreenQuad::D3D12Render(D3D12* renderer) {
-	
 }

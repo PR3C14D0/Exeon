@@ -44,6 +44,7 @@ private:
 
 	DescriptorHeap* m_rtvHeap;
 	DescriptorHeap* m_dsvHeap;
+	DescriptorHeap* m_cbvSrvHeap;
 
 	ComPtr<ID3D12Resource> m_albedoBuff;
 	ComPtr<ID3D12Resource> m_uvBuff;
