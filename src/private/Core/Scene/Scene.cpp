@@ -1,5 +1,5 @@
-#include "Core/Scene.h"
+#include "Core/Scene/Scene.h"
 
-Scene::Scene() {
-
+Scene::Scene(std::string name) {
+	this->name = name;
 }

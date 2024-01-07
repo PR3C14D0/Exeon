@@ -1,16 +1,22 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <Windows.h>
 #include <map>
-#include "Core/Scene.h"
+#include "Core/Scene/Scene.h"
 
 class SceneManager {
 private:
 	static SceneManager* m_instance;
+
+	std::map<std::string, Scene*> m_scenes;
 public:
 	static SceneManager* GetInstance();
 	SceneManager();
 
 	void Init();
 	void Update();
+
+	Scene* GetScene(std::string name);
+	void AddScene(Scene* scene);
 };
