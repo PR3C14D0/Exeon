@@ -39,6 +39,7 @@ private:
 	ComPtr<ID3D12Resource> m_rtvBuff;
 
 	ComPtr<ID3D12RootSignature> m_rootSig;
+	ComPtr<ID3D12PipelineState> m_plState;
 	
 	Shader* m_shader;
 public:

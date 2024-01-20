@@ -2,8 +2,10 @@
 #include "Core/Core.h"
 
 Shader::Shader(const char* shader, const char* vertexShader, const char* pixelShader) {
-	this->m_pBuffer = nullptr;
-	this->m_nBufferLength = 0;
+	this->m_pVertexBuffer = nullptr;
+	this->m_pPixelBuffer = nullptr;
+	this->m_nVertexBufferLength = 0;
+	this->m_nPixelBufferLength = 0;
 
 	Core* core = Core::GetInstance();
 	this->m_renderer = core->GetRenderer();
@@ -33,11 +35,21 @@ void Shader::D3D12Shader(const char* shader, const char* vertexShader, const cha
 		return;
 	}
 
-	this->m_pBuffer = vertexBlob->GetBufferPointer();
-	this->m_nBufferLength = vertexBlob->GetBufferSize();
+	this->m_pVertexBuffer = vertexBlob->GetBufferPointer();
+	this->m_nVertexBufferLength = vertexBlob->GetBufferSize();
+	this->m_pPixelBuffer = pixelBlob->GetBufferPointer();
+	this->m_nPixelBufferLength = pixelBlob->GetBufferSize();
 }
 
-UINT Shader::GetBuffer(LPVOID& pBuffer) {
-	pBuffer = this->m_pBuffer;
-	return this->m_nBufferLength;
+UINT Shader::GetBuffer(SHADER_BUFFER type, LPVOID& pBuffer) {
+	if (type == SHADER_BUFFER::VERTEX) {
+		pBuffer = this->m_pVertexBuffer;
+		return this->m_nVertexBufferLength;
+	}
+	else if (type == SHADER_BUFFER::PIXEL) {
+		pBuffer = this->m_pPixelBuffer;
+		return this->m_nPixelBufferLength;
+	}
+
+	return 0;
 }

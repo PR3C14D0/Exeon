@@ -87,6 +87,33 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	ThrowIfFailed(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, rootBlob.GetAddressOf(), nullptr));
 
 	ThrowIfFailed(renderer->m_dev->CreateRootSignature(0, rootBlob->GetBufferPointer(), rootBlob->GetBufferSize(), IID_PPV_ARGS(this->m_rootSig.GetAddressOf())));
+
+	void* vShader, *pShader;
+	UINT nVertexLength = this->m_shader->GetBuffer(SHADER_BUFFER::VERTEX, vShader);
+	UINT nPixelLength = this->m_shader->GetBuffer(SHADER_BUFFER::PIXEL, pShader);
+
+	D3D12_INPUT_ELEMENT_DESC elements[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL }
+	};
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC plDesc = { };
+	plDesc.VS.pShaderBytecode = vShader;
+	plDesc.VS.BytecodeLength = nVertexLength;
+	plDesc.PS.pShaderBytecode = pShader;
+	plDesc.PS.BytecodeLength = nPixelLength;
+	plDesc.pRootSignature = this->m_rootSig.Get();
+	plDesc.DepthStencilState.DepthEnable = TRUE;
+	plDesc.DepthStencilState.StencilEnable = FALSE;
+	plDesc.InputLayout.NumElements = _countof(elements);
+	plDesc.InputLayout.pInputElementDescs = elements;
+	plDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	plDesc.NodeMask = 0;
+	plDesc.SampleDesc.Count = 8;
+	plDesc.SampleMask = UINT32_MAX;
+	plDesc.NumRenderTargets = 1;
+	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+	ThrowIfFailed(this->m_dev->CreateGraphicsPipelineState(&plDesc, IID_PPV_ARGS(this->m_plState.GetAddressOf())));
 }
 
 void ScreenQuad::Render() {
