@@ -123,4 +123,8 @@ void ScreenQuad::Render() {
 } 
 
 void ScreenQuad::D3D12Render(D3D12* renderer) {
+	this->m_list->OMSetRenderTargets(1, &this->m_rtvDescriptor.cpuHandle, FALSE, nullptr);
+	this->m_list->SetPipelineState(this->m_plState.Get());
+
+
 }

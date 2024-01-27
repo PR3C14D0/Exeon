@@ -126,7 +126,7 @@ void D3D12::InitDepth() {
 
 	D3D12_RESOURCE_DESC depthBuffDesc = { };
 	depthBuffDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthBuffDesc.SampleDesc.Count = 1;
+	depthBuffDesc.SampleDesc.Count = 8;
 	depthBuffDesc.Width = this->m_nWidth;
 	depthBuffDesc.Height = this->m_nHeight;
 	depthBuffDesc.MipLevels = 1;
@@ -202,6 +202,7 @@ void D3D12::Update() {
 
 	this->m_sc->Present(this->m_vsyncState, 0);
 	this->m_nActualBackBuffer = this->m_sc->GetCurrentBackBufferIndex();
+	this->WaitFrame();
 }
 
 void D3D12::WaitFrame() {
