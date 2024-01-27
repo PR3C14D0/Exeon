@@ -40,8 +40,6 @@ void D3D12::Init(HWND hwnd) {
 	ThrowIfFailed(this->m_dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(this->m_alloc.GetAddressOf())));
 	ThrowIfFailed(this->m_dev->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, this->m_alloc.Get(), nullptr, IID_PPV_ARGS(this->m_list.GetAddressOf())));
 
-	ThrowIfFailed(this->m_list->Close());
-
 	DXGI_SWAP_CHAIN_DESC1 scDesc = { };
 	scDesc.Width = this->m_nWidth;
 	scDesc.Height = this->m_nHeight;
@@ -116,8 +114,25 @@ void D3D12::Init(HWND hwnd) {
 	this->m_dev->CreateRenderTargetView(this->m_uvBuff.Get(), &GBufferDesc, UVDesc.cpuHandle);
 	this->m_dev->CreateRenderTargetView(this->m_positionBuff.Get(), &GBufferDesc, positionDesc.cpuHandle);
 
+	this->ResourceBarrier(this->m_albedoBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	this->ResourceBarrier(this->m_uvBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	this->ResourceBarrier(this->m_positionBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
 	// We'll allocate 3 for our ScreenQuad.
 	this->m_cbvSrvHeap = new DescriptorHeap(3, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
+
+	ZeroMemory(&this->m_viewport, sizeof(D3D12_VIEWPORT));
+	this->m_viewport.Width = this->m_nWidth;
+	this->m_viewport.Height = this->m_nHeight;
+	this->m_viewport.MaxDepth = 1.f;
+
+	ThrowIfFailed(this->m_list->Close());
+
+	ID3D12CommandList* lists[] = {
+		this->m_list.Get()
+	};
+	this->m_queue->ExecuteCommandLists(1, lists);
+	this->WaitFrame();
 }
 
 void D3D12::InitDepth() {

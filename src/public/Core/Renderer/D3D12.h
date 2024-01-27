@@ -56,6 +56,8 @@ private:
 
 	UINT m_nBackBuffers;
 
+	D3D12_VIEWPORT m_viewport;
+
 	void ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState);
 
 	VSYNC m_vsyncState;
