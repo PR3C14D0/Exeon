@@ -1,4 +1,5 @@
 #include "Core/Renderer/D3D12.h"
+#include "Core/Renderer/ScreenQuad.h"
 
 D3D12::D3D12() : Renderer::Renderer() {
 	this->m_nBackBuffers = 2;
@@ -121,6 +122,9 @@ void D3D12::Init(HWND hwnd) {
 	// We'll allocate 3 for our ScreenQuad.
 	this->m_cbvSrvHeap = new DescriptorHeap(3, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 
+	this->m_screenQuad = new ScreenQuad();
+	this->m_screenQuad->Init();
+
 	ZeroMemory(&this->m_viewport, sizeof(D3D12_VIEWPORT));
 	this->m_viewport.Width = this->m_nWidth;
 	this->m_viewport.Height = this->m_nHeight;
@@ -207,6 +211,9 @@ void D3D12::Update() {
 
 	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
+	/* We only call this method once per frame. */
+	this->m_screenQuad->Render();
+
 	ThrowIfFailed(this->m_list->Close());
 
 	ID3D12CommandList* commandLists[] = {
@@ -255,6 +262,9 @@ void D3D12::CreateBuffer(void* pData, UINT nLength, ComPtr<ID3D12Resource>& reso
 	buffDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 	buffDesc.Height = 1;
 	buffDesc.Width = nLength;
+	buffDesc.MipLevels = 1;
+	buffDesc.SampleDesc.Count = 1;
+	buffDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	D3D12_HEAP_PROPERTIES heapProps = { };
 	heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;

@@ -15,8 +15,10 @@ enum VSYNC {
 	MEDIUM = 2
 };
 
+class ScreenQuad;
+
 class D3D12 : public Renderer {
-	friend class ScreenQuad;
+	friend ScreenQuad;
 private:
 	ComPtr<IDXGIFactory4> m_factory;
 	ComPtr<IDXGIAdapter1> m_adapter;
@@ -57,6 +59,8 @@ private:
 	UINT m_nBackBuffers;
 
 	D3D12_VIEWPORT m_viewport;
+
+	ScreenQuad* m_screenQuad;
 
 	void ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState);
 

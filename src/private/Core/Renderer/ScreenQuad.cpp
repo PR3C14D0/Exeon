@@ -49,6 +49,7 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	this->m_rtvDescriptor = renderer->m_rtvHeap->GetDescriptor(this->m_nRTVIndex);
 	
 	renderer->CreateTexture(renderer->m_nWidth, renderer->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_rtvBuff);
+	renderer->ResourceBarrier(this->m_rtvBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = { };
 	rtvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -125,6 +126,11 @@ void ScreenQuad::Render() {
 void ScreenQuad::D3D12Render(D3D12* renderer) {
 	this->m_list->OMSetRenderTargets(1, &this->m_rtvDescriptor.cpuHandle, FALSE, nullptr);
 	this->m_list->SetPipelineState(this->m_plState.Get());
+	this->m_list->ClearRenderTargetView(this->m_rtvDescriptor.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
 
+	this->m_list->IASetVertexBuffers(0, 1, &this->m_VBV);
+	this->m_list->IASetIndexBuffer(&this->m_IBV);
+	this->m_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	this->m_list->DrawIndexedInstanced(this->m_indices.size(), 1, 0, 0, 0);
 }
