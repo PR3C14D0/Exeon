@@ -105,6 +105,7 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	plDesc.pRootSignature = this->m_rootSig.Get();
 	plDesc.DepthStencilState.DepthEnable = TRUE;
 	plDesc.DepthStencilState.StencilEnable = FALSE;
+	plDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 	plDesc.InputLayout.NumElements = _countof(elements);
 	plDesc.InputLayout.pInputElementDescs = elements;
 	plDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
@@ -113,6 +114,10 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	plDesc.SampleMask = UINT32_MAX;
 	plDesc.NumRenderTargets = 1;
 	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+	plDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	plDesc.RasterizerState.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
+	plDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
 	ThrowIfFailed(this->m_dev->CreateGraphicsPipelineState(&plDesc, IID_PPV_ARGS(this->m_plState.GetAddressOf())));
 }
