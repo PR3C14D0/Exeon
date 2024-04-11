@@ -16,12 +16,11 @@ Shader::Shader(const char* shader, const char* vertexShader, const char* pixelSh
 }
 
 void Shader::D3D12Shader(const char* shader, const char* vertexShader, const char* pixelShader) {
-	ComPtr<ID3DBlob> vertexBlob, pixelBlob;
 	ComPtr<ID3DBlob> vertexError, pixelError;
 
 	LPCWSTR wShader = MultiByteToUnicode(shader);
-	D3DCompileFromFile(wShader, nullptr, nullptr, vertexShader, "vs_5_1", NULL, NULL, vertexBlob.GetAddressOf(), vertexError.GetAddressOf());
-	D3DCompileFromFile(wShader, nullptr, nullptr, pixelShader, "ps_5_1", NULL, NULL, pixelBlob.GetAddressOf(), pixelError.GetAddressOf());
+	D3DCompileFromFile(wShader, nullptr, nullptr, vertexShader, "vs_5_1", NULL, NULL, m_vertexBlob.GetAddressOf(), vertexError.GetAddressOf());
+	D3DCompileFromFile(wShader, nullptr, nullptr, pixelShader, "ps_5_1", NULL, NULL, m_pixelBlob.GetAddressOf(), pixelError.GetAddressOf());
 
 	if (vertexError) {
 		std::cout << "[ERROR] " << (char*)vertexError->GetBufferPointer() << std::endl;
@@ -35,10 +34,10 @@ void Shader::D3D12Shader(const char* shader, const char* vertexShader, const cha
 		return;
 	}
 
-	this->m_pVertexBuffer = vertexBlob->GetBufferPointer();
-	this->m_nVertexBufferLength = vertexBlob->GetBufferSize();
-	this->m_pPixelBuffer = pixelBlob->GetBufferPointer();
-	this->m_nPixelBufferLength = pixelBlob->GetBufferSize();
+	this->m_pVertexBuffer = m_vertexBlob->GetBufferPointer();
+	this->m_nVertexBufferLength = m_vertexBlob->GetBufferSize();
+	this->m_pPixelBuffer = m_pixelBlob->GetBufferPointer();
+	this->m_nPixelBufferLength = m_pixelBlob->GetBufferSize();
 }
 
 UINT Shader::GetBuffer(SHADER_BUFFER type, LPVOID& pBuffer) {

@@ -25,6 +25,8 @@ private:
 	LPVOID m_pVertexBuffer;
 	UINT m_nVertexBufferLength;
 
+	ComPtr<ID3DBlob> m_vertexBlob, m_pixelBlob;
+
 	LPVOID m_pPixelBuffer;
 	UINT m_nPixelBufferLength;
 
