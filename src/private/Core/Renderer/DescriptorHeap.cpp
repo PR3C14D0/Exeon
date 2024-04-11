@@ -20,7 +20,7 @@ DescriptorHeap::DescriptorHeap(UINT nDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE typ
 
 		this->m_nIncrement = this->m_dev->GetDescriptorHandleIncrementSize(type);
 		this->m_cpuHandle = this->m_heap->GetCPUDescriptorHandleForHeapStart();
-		this->m_gpuHandle = this->m_heap->GetGPUDescriptorHandleForHeapStart();
+		this->m_gpuHandle = this->m_bShaderVisible ? this->m_heap->GetGPUDescriptorHandleForHeapStart() : D3D12_GPU_DESCRIPTOR_HANDLE{ 0x00 };
 	}
 }
 
@@ -38,7 +38,7 @@ void DescriptorHeap::Allocate(UINT nDescriptors) {
 
 		this->m_nIncrement = this->m_dev->GetDescriptorHandleIncrementSize(heapDesc.Type);
 		this->m_cpuHandle = heap->GetCPUDescriptorHandleForHeapStart();
-		this->m_gpuHandle = heap->GetGPUDescriptorHandleForHeapStart();
+		this->m_gpuHandle = this->m_bShaderVisible ? heap->GetGPUDescriptorHandleForHeapStart() : D3D12_GPU_DESCRIPTOR_HANDLE{ 0x00 };
 
 		this->m_heap.Swap(heap);
 		heap->Release();
