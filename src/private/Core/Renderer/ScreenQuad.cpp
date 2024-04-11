@@ -109,6 +109,7 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	plDesc.InputLayout.NumElements = _countof(elements);
 	plDesc.InputLayout.pInputElementDescs = elements;
 	plDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	plDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	plDesc.NodeMask = 0;
 	plDesc.SampleDesc.Count = 8;
 	plDesc.SampleMask = UINT32_MAX;
