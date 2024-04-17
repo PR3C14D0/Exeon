@@ -103,9 +103,8 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	plDesc.PS.pShaderBytecode = pShader;
 	plDesc.PS.BytecodeLength = nPixelLength;
 	plDesc.pRootSignature = this->m_rootSig.Get();
-	plDesc.DepthStencilState.DepthEnable = TRUE;
+	plDesc.DepthStencilState.DepthEnable = FALSE;
 	plDesc.DepthStencilState.StencilEnable = FALSE;
-	plDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 	plDesc.InputLayout.NumElements = _countof(elements);
 	plDesc.InputLayout.pInputElementDescs = elements;
 	plDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
@@ -133,6 +132,7 @@ void ScreenQuad::D3D12Render(D3D12* renderer) {
 	this->m_list->OMSetRenderTargets(1, &this->m_rtvDescriptor.cpuHandle, FALSE, nullptr);
 	this->m_list->SetPipelineState(this->m_plState.Get());
 	this->m_list->ClearRenderTargetView(this->m_rtvDescriptor.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
+	this->m_list->SetGraphicsRootSignature(this->m_rootSig.Get());
 
 	this->m_list->IASetVertexBuffers(0, 1, &this->m_VBV);
 	this->m_list->IASetIndexBuffer(&this->m_IBV);
