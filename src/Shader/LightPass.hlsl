@@ -3,7 +3,7 @@ struct VertexOutput
     float4 position : SV_Position;
 };
 
-VertexOutput VertexMain(float4 position : POSITION0)
+VertexOutput VertexMain(float4 position : POSITION0, float2 uv : TEXCOORD0)
 {
     VertexOutput output;
     output.position = position;
