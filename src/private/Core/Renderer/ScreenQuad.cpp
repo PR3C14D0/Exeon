@@ -51,6 +51,8 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	renderer->CreateTexture(renderer->m_nWidth, renderer->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_rtvBuff);
 	renderer->ResourceBarrier(this->m_rtvBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
+	this->m_rtvBuff->SetName(L"ScreenQuad Buffer");
+
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = { };
 	rtvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	rtvDesc.Texture2D.MipSlice = 1;
@@ -117,8 +119,20 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-	plDesc.RasterizerState.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
 	plDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+	plDesc.RasterizerState.FrontCounterClockwise = FALSE;
+	plDesc.RasterizerState.DepthClipEnable = TRUE;
+	
+	const D3D12_RENDER_TARGET_BLEND_DESC rtbDesc = {
+		FALSE, FALSE,
+		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
+		D3D12_LOGIC_OP_NOOP,
+		D3D12_COLOR_WRITE_ENABLE_ALL,
+	};
+
+	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
+		plDesc.BlendState.RenderTarget[i] = rtbDesc;
 
 	ThrowIfFailed(this->m_dev->CreateGraphicsPipelineState(&plDesc, IID_PPV_ARGS(this->m_plState.GetAddressOf())));
 }
@@ -140,4 +154,8 @@ void ScreenQuad::D3D12Render(D3D12* renderer) {
 	this->m_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	this->m_list->DrawIndexedInstanced(this->m_indices.size(), 1, 0, 0, 0);
+}
+
+void ScreenQuad::GetResource(ComPtr<ID3D12Resource>& res) {
+	ThrowIfFailed(this->m_rtvBuff.CopyTo(res.GetAddressOf()));
 }

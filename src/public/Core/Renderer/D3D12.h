@@ -59,6 +59,7 @@ private:
 	UINT m_nBackBuffers;
 
 	D3D12_VIEWPORT m_viewport;
+	D3D12_RECT m_scissor;
 
 	ScreenQuad* m_screenQuad;
 

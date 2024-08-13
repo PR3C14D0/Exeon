@@ -44,6 +44,8 @@ private:
 	Shader* m_shader;
 public:
 	ScreenQuad();
+
+	void GetResource(ComPtr<ID3D12Resource>& res);
 	
 	void Init();
 	void Render();

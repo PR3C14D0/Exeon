@@ -130,6 +130,12 @@ void D3D12::Init(HWND hwnd) {
 	this->m_viewport.Height = this->m_nHeight;
 	this->m_viewport.MaxDepth = 1.f;
 
+	ZeroMemory(&this->m_scissor, sizeof(D3D12_RECT));
+	this->m_scissor.left = 0;
+	this->m_scissor.top = 0;
+	this->m_scissor.right = this->m_nWidth;
+	this->m_scissor.bottom = this->m_nHeight;
+
 	ThrowIfFailed(this->m_list->Close());
 
 	ID3D12CommandList* lists[] = {
@@ -197,6 +203,9 @@ void D3D12::Update() {
 	this->m_list->ClearRenderTargetView(UVDesc.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
 	this->m_list->ClearRenderTargetView(positionDesc.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
 
+	this->m_list->RSSetViewports(1, &this->m_viewport);
+	this->m_list->RSSetScissorRects(1, &this->m_scissor);
+
 	Descriptor dsv = this->m_dsvHeap->GetDescriptor(0);
 	D3D12_CPU_DESCRIPTOR_HANDLE gbuffers[] = {
 		albedoDesc.cpuHandle,
@@ -213,6 +222,17 @@ void D3D12::Update() {
 
 	/* We only call this method once per frame. */
 	this->m_screenQuad->Render();
+
+	ComPtr<ID3D12Resource> sqRes = nullptr;
+	this->m_screenQuad->GetResource(sqRes);
+
+	this->ResourceBarrier(sqRes, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
+	this->ResourceBarrier(this->m_backBuffers[this->m_nActualBackBuffer], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+
+	this->m_list->ResolveSubresource(this->m_backBuffers[this->m_nActualBackBuffer].Get(), 0, sqRes.Get(), 0, DXGI_FORMAT_B8G8R8A8_UNORM);
+
+	this->ResourceBarrier(sqRes, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	this->ResourceBarrier(this->m_backBuffers[this->m_nActualBackBuffer], D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PRESENT);
 
 	ThrowIfFailed(this->m_list->Close());
 
