@@ -3,7 +3,11 @@
 #include <vector>
 #include <map>
 
+#include "Core/GameObject/GameObject.h"
+
 class Scene {
+private:
+	std::vector<GameObject*> m_gameObjects;
 public:
 	std::string name;
 
@@ -11,4 +15,6 @@ public:
 
 	void Init();
 	void Update();
+
+	void AddGameObject(GameObject* object);
 };

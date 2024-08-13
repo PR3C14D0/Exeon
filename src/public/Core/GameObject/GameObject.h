@@ -7,4 +7,7 @@ private:
 	std::string m_name;
 public:
 	GameObject(std::string name);
+
+	void Init();
+	void Update();
 };
