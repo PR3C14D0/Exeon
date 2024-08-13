@@ -3,11 +3,11 @@
 #include <iostream>
 
 class Component {
-private:
+protected:
 	std::string m_name;
 public:
-	Component(std::string name);
+	explicit Component(std::string name);
 
-	void Init() = default;
-	void Update() = default;
+	virtual void Init();
+	virtual void Update();
 };
