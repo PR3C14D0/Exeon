@@ -3,7 +3,7 @@
 #
 
 # Agregue un origen al ejecutable de este proyecto.
-add_executable (Exeon  "main.cpp"   "public/Core/Core.h" "private/Core/Core.cpp" "public/Core/Renderer/Renderer.h" "private/Core/Renderer/Renderer.cpp" "public/Core/Renderer/D3D12.h" "private/Core/Renderer/D3D12.cpp" "public/Util.h" "public/Core/Renderer/DescriptorHeap.h" "private/Core/Renderer/DescriptorHeap.cpp" "public/Core/Renderer/Descriptor.h" "public/Core/Renderer/Shader.h" "private/Core/Renderer/Shader.cpp" "public/Core/Renderer/ScreenQuad.h" "private/Core/Renderer/ScreenQuad.cpp" "public/Core/Scene/SceneManager.h" "private/Core/Scene/SceneManager.cpp" "public/Core/Scene/Scene.h" "private/Core/Scene/Scene.cpp")
+add_executable (Exeon  "main.cpp"   "public/Core/Core.h" "private/Core/Core.cpp" "public/Core/Renderer/Renderer.h" "private/Core/Renderer/Renderer.cpp" "public/Core/Renderer/D3D12.h" "private/Core/Renderer/D3D12.cpp" "public/Util.h" "public/Core/Renderer/DescriptorHeap.h" "private/Core/Renderer/DescriptorHeap.cpp" "public/Core/Renderer/Descriptor.h" "public/Core/Renderer/Shader.h" "private/Core/Renderer/Shader.cpp" "public/Core/Renderer/ScreenQuad.h" "private/Core/Renderer/ScreenQuad.cpp" "public/Core/Scene/SceneManager.h" "private/Core/Scene/SceneManager.cpp" "public/Core/Scene/Scene.h" "private/Core/Scene/Scene.cpp" "public/Core/GameObject/GameObject.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Exeon PROPERTY CXX_STANDARD 20)
