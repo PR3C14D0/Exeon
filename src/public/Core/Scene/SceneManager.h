@@ -10,6 +10,9 @@ private:
 	static SceneManager* m_instance;
 
 	std::map<std::string, Scene*> m_scenes;
+	Scene* m_actualScene;
+
+	Scene* m_sampleScene;
 public:
 	static SceneManager* GetInstance();
 	SceneManager();
@@ -19,4 +22,6 @@ public:
 
 	Scene* GetScene(std::string name);
 	void AddScene(Scene* scene);
+
+	void LoadScene(std::string name);
 };
