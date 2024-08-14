@@ -75,7 +75,9 @@ void Mesh::LoadModel(std::string filename) {
 		this->m_vertices[i] = vertices;
 
 		aiString texPath;
+		if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0 && material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+			const aiTexture* texture = scene->GetEmbeddedTexture(texPath.C_Str());
 
-		
+		}
 	}
 }
