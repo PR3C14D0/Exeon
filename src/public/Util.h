@@ -8,6 +8,7 @@ typedef float RG[2];
 
 struct Vertex {
 	RGB xyz;
+	RGB normal;
 	RG uv;
 };
 

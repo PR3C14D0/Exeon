@@ -7,6 +7,8 @@
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
+#include <map>
+#include "Util.h"
 
 #include "Core/GameObject/Component/Component.h"
 
@@ -31,6 +33,8 @@ private:
 	std::vector<ComPtr<ID3D12Resource>> m_buffers;
 
 	bool m_bMeshLoaded;
+
+	std::map<UINT, std::vector<Vertex>> m_vertices;
 public:
 	Mesh(std::string name);
 

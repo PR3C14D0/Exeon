@@ -43,4 +43,39 @@ void Mesh::LoadModel(std::string filename) {
 
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(filename, NULL);
+
+	for (UINT i = 0; i < scene->mNumMeshes; i++) {
+		aiMesh* mesh = scene->mMeshes[i];
+		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+		std::vector<Vertex> vertices;
+
+		for (UINT x = 0; x < mesh->mNumVertices; x++) {
+			aiVector3D vec = mesh->mVertices[x];
+			RGB pos = { vec.x, vec.y, vec.z };
+			RGB normal = { 0.f, 0.f, 0.f };
+			RG uv = { 0.f, 0.f };
+
+			if (mesh->HasNormals()) {
+				aiVector3D nml = mesh->mNormals[x];
+				normal[0] = nml.x;
+				normal[1] = nml.y;
+				normal[2] = nml.z;
+			}
+
+			if (mesh->HasTextureCoords(0)) {
+				aiVector3D texCoord = mesh->mTextureCoords[0][x];
+				uv[0] = texCoord.x;
+				uv[1] = texCoord.y;
+			}
+
+			Vertex vert = { {pos[0], pos[1], pos[2]}, {normal[0], normal[1], normal[2]}, {uv[0], uv[1]} };
+			vertices.push_back(vert);
+		}
+
+		this->m_vertices[i] = vertices;
+
+		aiString texPath;
+
+		
+	}
 }

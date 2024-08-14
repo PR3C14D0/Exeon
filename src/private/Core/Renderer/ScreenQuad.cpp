@@ -11,10 +11,10 @@ void ScreenQuad::Init() {
 	this->m_renderer = this->m_core->GetRenderer();
 
 	this->m_vertices = {
-		{{-1.f, 1.f, 0.f}, {0.f, 0.f}},
-		{{1.f, 1.f, 0.f}, {1.f, 0.f}},
-		{{1.f, -1.f, 0.f}, {1.f, 1.f}},
-		{{-1.f, -1.f, 0.f}, {0.f, 1.f}},
+		{{-1.f, 1.f, 0.f}, {0.f, 0.f, 0.f}, {0.f, 0.f}},
+		{{1.f, 1.f, 0.f}, {0.f, 0.f, 0.f}, {1.f, 0.f}},
+		{{1.f, -1.f, 0.f}, {0.f, 0.f, 0.f}, {1.f, 1.f}},
+		{{-1.f, -1.f, 0.f}, {0.f, 0.f, 0.f}, {0.f, 1.f}},
 	};
 
 	this->m_indices = {
@@ -97,7 +97,8 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 
 	D3D12_INPUT_ELEMENT_DESC elements[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL}
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL}
 	};
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC plDesc = { };
