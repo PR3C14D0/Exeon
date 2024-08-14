@@ -4,6 +4,9 @@
 Mesh::Mesh(std::string name) : Component::Component(name) {
 	this->m_core = Core::GetInstance();
 
+	this->m_dev = nullptr;
+	this->m_list = nullptr;
+
 	this->m_renderer = nullptr;
 }
 
@@ -18,5 +21,8 @@ void Mesh::Init() {
 }
 
 void Mesh::D3D12Init(D3D12* renderer) {
-	
+	renderer->GetDevice(this->m_dev);
+	renderer->GetCommandList(this->m_list);
+
+
 }
