@@ -41,7 +41,6 @@ void DescriptorHeap::Allocate(UINT nDescriptors) {
 		this->m_gpuHandle = this->m_bShaderVisible ? heap->GetGPUDescriptorHandleForHeapStart() : D3D12_GPU_DESCRIPTOR_HANDLE{ 0x00 };
 
 		this->m_heap.Swap(heap);
-		heap->Release();
 	}
 }
 
