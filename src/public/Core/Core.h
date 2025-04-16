@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include "Core/Renderer/Renderer.h"
 #include "Core/Renderer/D3D12.h"
+#include "Scene/SceneManager.h"
 
 class Core {
 private:
@@ -11,6 +12,8 @@ private:
 	HWND m_hwnd;
 
 	Renderer* m_renderer;
+	
+	SceneManager* m_sceneManager;
 public:
 	Core();
 	void Init();
@@ -18,7 +21,8 @@ public:
 	void SetHWND(HWND& hwnd);
 
 	static Core* GetInstance();
-	
+
+
 	void MainLoop();
 
 	Renderer* GetRenderer();
