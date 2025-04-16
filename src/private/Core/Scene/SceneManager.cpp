@@ -8,11 +8,13 @@ SceneManager::SceneManager() {
 }
 
 void SceneManager::Init() {
-
+	this->m_actualScene->Init();
 }
 
 void SceneManager::Update() {
-
+	if (this->m_actualScene) {
+		this->m_actualScene->Update();
+	}
 }
 
 void SceneManager::AddScene(Scene* scene) {
