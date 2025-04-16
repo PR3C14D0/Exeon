@@ -8,6 +8,7 @@
 class Scene {
 private:
 	std::vector<GameObject*> m_gameObjects;
+	GameObject* m_go;
 public:
 	std::string name;
 

@@ -2,6 +2,8 @@
 
 Scene::Scene(std::string name) {
 	this->name = name;
+	this->m_go = new GameObject("SampleObject");
+	this->m_gameObjects.push_back(this->m_go);
 }
 
 void Scene::Init() {
