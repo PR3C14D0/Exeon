@@ -265,20 +265,18 @@ void D3D12::WaitFrame() {
 
 void D3D12::InitGBufferShader() {
 	this->m_gBufferShader = new Shader("GBufferPass.hlsl", "VertexMain", "PixelMain");
-	this->m_cbvSrvHeap->Allocate(1);
+	void* vertexShader, *pixelShader;
+	UINT nVertexShaderLength = this->m_gBufferShader->GetBuffer(SHADER_BUFFER::VERTEX, vertexShader);
+	UINT nPixelShaderLength = this->m_gBufferShader->GetBuffer(SHADER_BUFFER::PIXEL, pixelShader);
 
-	this->m_nGBShaderIndex = this->m_cbvSrvHeap->GetLastDescriptorIndex();
+	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
+	rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	rootDesc.pStaticSamplers = nullptr;
+	rootDesc.NumStaticSamplers = 0;
 
-	D3D12_DESCRIPTOR_RANGE gbRange = { };
-	gbRange.NumDescriptors = 1;
-	gbRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	gbRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-	D3D12_ROOT_DESCRIPTOR_TABLE gbRootTable = {};
-	gbRootTable.pDescriptorRanges = &gbRange;
-	gbRootTable.NumDescriptorRanges = 1;
-
-
+	ComPtr<ID3DBlob> rootBlob;
+	ThrowIfFailed(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, rootBlob.GetAddressOf(), nullptr));
+	ThrowIfFailed(this->m_dev->CreateRootSignature(0, rootBlob->GetBufferPointer(), rootBlob->GetBufferSize(), IID_PPV_ARGS(this->m_rootSig.GetAddressOf())));
 }
 
 void D3D12::ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState) {

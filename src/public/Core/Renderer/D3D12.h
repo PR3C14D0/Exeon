@@ -71,7 +71,7 @@ private:
 	void InitDepth();
 	void InitGBufferShader();
 	Shader* m_gBufferShader;
-	UINT m_nGBShaderIndex;
+	ComPtr<ID3D12RootSignature> m_rootSig;
 
 public:
 	D3D12();

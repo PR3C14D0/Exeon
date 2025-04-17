@@ -1,7 +1,7 @@
 struct VertexOutput
 {
     float4 position : SV_Position;
-    float4 uv : TEXCOORD;
+    float2 uv : TEXCOORD;
 };
 
 VertexOutput VertexMain(float4 position : POSITION0, float2 uv : TEXCOORD0)

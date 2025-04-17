@@ -65,14 +65,14 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 
 	Descriptor srvDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
 
-	D3D12_DESCRIPTOR_RANGE gbufferRange = { };
-	gbufferRange.NumDescriptors = 3;
-	gbufferRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	gbufferRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	D3D12_DESCRIPTOR_RANGE gBufferRange = { };
+	gBufferRange.NumDescriptors = 3;
+	gBufferRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	gBufferRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	
 	D3D12_ROOT_DESCRIPTOR_TABLE rootTable = { };
 	rootTable.NumDescriptorRanges = 1;
-	rootTable.pDescriptorRanges = &gbufferRange;
+	rootTable.pDescriptorRanges = &gBufferRange;
 
 	D3D12_ROOT_PARAMETER rootParams = { };
 	rootParams.DescriptorTable = rootTable;
