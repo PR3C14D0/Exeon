@@ -124,6 +124,7 @@ void D3D12::Init(HWND hwnd) {
 
 	this->m_screenQuad = new ScreenQuad();
 	this->m_screenQuad->Init();
+	this->InitGBufferShader();
 
 	ZeroMemory(&this->m_viewport, sizeof(D3D12_VIEWPORT));
 	this->m_viewport.Width = this->m_nWidth;
@@ -260,6 +261,24 @@ void D3D12::WaitFrame() {
 	}
 
 	return;
+}
+
+void D3D12::InitGBufferShader() {
+	this->m_gBufferShader = new Shader("GBufferPass.hlsl", "VertexMain", "PixelMain");
+	this->m_cbvSrvHeap->Allocate(1);
+
+	this->m_nGBShaderIndex = this->m_cbvSrvHeap->GetLastDescriptorIndex();
+
+	D3D12_DESCRIPTOR_RANGE gbRange = { };
+	gbRange.NumDescriptors = 1;
+	gbRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	gbRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+	D3D12_ROOT_DESCRIPTOR_TABLE gbRootTable = {};
+	gbRootTable.pDescriptorRanges = &gbRange;
+	gbRootTable.NumDescriptorRanges = 1;
+
+
 }
 
 void D3D12::ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState) {

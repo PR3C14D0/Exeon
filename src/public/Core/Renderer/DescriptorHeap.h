@@ -30,4 +30,5 @@ public:
 	void Allocate(UINT nDescriptors);
 
 	UINT GetDescriptorCount();
+	UINT GetLastDescriptorIndex();
 };

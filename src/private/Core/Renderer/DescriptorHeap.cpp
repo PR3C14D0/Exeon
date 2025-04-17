@@ -55,6 +55,10 @@ Descriptor DescriptorHeap::GetDescriptor(UINT nIndex) {
 	return retDesc;
 }
 
+UINT DescriptorHeap::GetLastDescriptorIndex() {
+	return this->m_nDescriptors - 1;
+}
+
 UINT DescriptorHeap::GetDescriptorCount() {
 	return this->m_nDescriptors;
 }

@@ -69,6 +69,9 @@ private:
 	VSYNC m_vsyncState;
 
 	void InitDepth();
+	void InitGBufferShader();
+	Shader* m_gBufferShader;
+	UINT m_nGBShaderIndex;
 
 public:
 	D3D12();
