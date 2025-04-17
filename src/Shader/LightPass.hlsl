@@ -18,6 +18,6 @@ struct PixelOutput
 PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {
     PixelOutput output;
-    output.screen = float4(1.f, 0.f, 0.f, 1.f);
+    output.screen = float4(0.f, 0.f, 0.f, 1.f);
     return output;
 }
