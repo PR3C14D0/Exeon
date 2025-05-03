@@ -14,6 +14,7 @@ void Core::Init() {
 	m_renderer->Init(this->m_hwnd);
 	m_sceneManager->Init();
 	this->m_resMgr = ResourceManager::GetInstance();
+	this->m_resMgr->Init();
 }
 
 void Core::SetHWND(HWND& hwnd) {

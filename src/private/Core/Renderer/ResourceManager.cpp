@@ -12,6 +12,16 @@ ResourceManager::ResourceManager() {
 	}
 }
 
+BOOL WINAPI InitWICFactory(PINIT_ONCE, PVOID, PVOID* factory) noexcept {
+	return SUCCEEDED(CoCreateInstance(
+		CLSID_WICImagingFactory2,
+		nullptr,
+		CLSCTX_INPROC_SERVER,
+		__uuidof(IWICImagingFactory2),
+		factory
+	)) ? TRUE : FALSE;
+}
+
 void ResourceManager::D3D12Impl(D3D12* renderer) {
 	renderer->GetDevice(this->m_dev);
 	
@@ -20,12 +30,22 @@ void ResourceManager::D3D12Impl(D3D12* renderer) {
 
 	ThrowIfFailed(this->m_dev->CreateCommandList(1, D3D12_COMMAND_LIST_TYPE_DIRECT, this->m_alloc.Get(), nullptr, IID_PPV_ARGS(this->m_list.GetAddressOf())));
 	this->m_list->SetName(L"ResourceManager Graphics Command List");
+
+	static INIT_ONCE initOnce = INIT_ONCE_STATIC_INIT;
+	IWICImagingFactory2* factory = nullptr;
+	InitOnceExecuteOnce(&initOnce, InitWICFactory, nullptr, reinterpret_cast<LPVOID*>(&factory));
+	this->m_factory.Attach(factory);
 }
 
 void ResourceManager::Init() {
+
 }
 
 void ResourceManager::LoadTexture(ID3D12Resource** resource) {
+	if (resource) {
+		*resource = nullptr;
+	}
+
 
 }
 
