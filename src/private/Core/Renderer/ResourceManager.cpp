@@ -335,6 +335,37 @@ void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12
 		ThrowIfFailed(FC->Initialize(frame.Get(), convertGUID, WICBitmapDitherTypeErrorDiffusion, nullptr, 0, WICBitmapPaletteTypeMedianCut));
 		ThrowIfFailed(FC->CopyPixels(nullptr, static_cast<UINT>(rowPitch), static_cast<UINT>(imageSize), decodedData.get()));
 	}
+
+	/* Count the number of mips */
+	const uint32_t mipCount = 1u; // TODO: Calculate.
+
+	D3D12_RESOURCE_DESC resDesc = { };
+	resDesc.Width = width;
+	resDesc.Height = height;
+	resDesc.MipLevels = static_cast<UINT16>(mipCount);
+	resDesc.DepthOrArraySize = 1;
+	resDesc.Format = format;
+	resDesc.SampleDesc.Count = 1;
+	resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+	D3D12_HEAP_PROPERTIES heapProps = { };
+	heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	ComPtr<ID3D12Resource> tex;
+	ThrowIfFailed(this->m_dev->CreateCommittedResource(
+		&heapProps, D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(tex.GetAddressOf())
+	));
+
+	initData.pData = decodedData.get();
+	initData.RowPitch = static_cast<LONG>(rowPitch);
+	initData.SlicePitch = static_cast<LONG>(imageSize);
+
+	*resource = tex.Get();
 }
 
 ResourceManager* ResourceManager::GetInstance() {
