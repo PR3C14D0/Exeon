@@ -6,12 +6,14 @@ Core::Core() {
 	this->m_hwnd = NULL;
 	this->m_renderer = nullptr;
 	this->m_sceneManager = SceneManager::GetInstance();
+	this->m_resMgr = nullptr;
 }
 
 void Core::Init() {
 	this->m_renderer = new D3D12();
 	m_renderer->Init(this->m_hwnd);
 	m_sceneManager->Init();
+	this->m_resMgr = ResourceManager::GetInstance();
 }
 
 void Core::SetHWND(HWND& hwnd) {

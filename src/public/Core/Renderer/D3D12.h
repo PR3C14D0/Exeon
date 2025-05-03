@@ -1,3 +1,4 @@
+#pragma once
 #include "Core/Renderer/Renderer.h"
 #include <d3d12.h>
 #include <dxgi1_4.h>

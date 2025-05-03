@@ -4,6 +4,7 @@
 #include "Core/Renderer/Renderer.h"
 #include "Core/Renderer/D3D12.h"
 #include "Scene/SceneManager.h"
+#include "Renderer/ResourceManager.h"
 
 class Core {
 private:
@@ -14,6 +15,7 @@ private:
 	Renderer* m_renderer;
 	
 	SceneManager* m_sceneManager;
+	ResourceManager* m_resMgr;
 public:
 	Core();
 	void Init();
