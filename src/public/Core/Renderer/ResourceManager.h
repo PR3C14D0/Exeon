@@ -1,3 +1,10 @@
+/*
+	WIC texture loading from memory got from DirectXTK12.
+	Special thanks to the DirectXTK12 and developers.
+
+	GitHub repository: https://github.com/microsoft/DirectXTK12
+*/
+
 #pragma once
 #include <iostream>
 #include <Windows.h>
