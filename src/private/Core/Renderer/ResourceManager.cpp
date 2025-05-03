@@ -323,6 +323,18 @@ void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12
 			ThrowIfFailed(FC->CopyPixels(nullptr, static_cast<UINT>(rowPitch), static_cast<UINT>(imageSize), decodedData.get()));
 		}
 	}
+	else {
+		/* Format conversion but no resize */
+
+		ComPtr<IWICFormatConverter> FC;
+		ThrowIfFailed(this->m_factory->CreateFormatConverter(FC.GetAddressOf()));
+
+		BOOL bCanConvert = FALSE;
+		ThrowIfFailed(FC->CanConvert(pixelFormat, convertGUID, &bCanConvert));
+
+		ThrowIfFailed(FC->Initialize(frame.Get(), convertGUID, WICBitmapDitherTypeErrorDiffusion, nullptr, 0, WICBitmapPaletteTypeMedianCut));
+		ThrowIfFailed(FC->CopyPixels(nullptr, static_cast<UINT>(rowPitch), static_cast<UINT>(imageSize), decodedData.get()));
+	}
 }
 
 ResourceManager* ResourceManager::GetInstance() {
