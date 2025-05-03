@@ -20,6 +20,7 @@ class ScreenQuad;
 
 class D3D12 : public Renderer {
 	friend ScreenQuad;
+	friend class ResourceManager;
 	friend class Mesh;
 private:
 	ComPtr<IDXGIFactory4> m_factory;

@@ -151,6 +151,7 @@ void ResourceManager::D3D12Impl(D3D12* renderer) {
 
 	ThrowIfFailed(this->m_dev->CreateCommandList(1, D3D12_COMMAND_LIST_TYPE_DIRECT, this->m_alloc.Get(), nullptr, IID_PPV_ARGS(this->m_list.GetAddressOf())));
 	this->m_list->SetName(L"ResourceManager Graphics Command List");
+	ThrowIfFailed(this->m_list->Close());
 	std::cout << "[DEBUG] ResourceManager: ID3D12GraphicsCommandList initialized" << std::endl;
 
 	static INIT_ONCE initOnce = INIT_ONCE_STATIC_INIT;
@@ -166,6 +167,8 @@ void ResourceManager::Init() {
 }
 
 void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12Resource** resource) {
+	ThrowIfFailed(this->m_alloc->Reset());
+	ThrowIfFailed(this->m_list->Reset(this->m_alloc.Get(), nullptr));
 	if (resource) {
 		*resource = nullptr;
 	}
@@ -365,7 +368,102 @@ void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12
 	initData.RowPitch = static_cast<LONG>(rowPitch);
 	initData.SlicePitch = static_cast<LONG>(imageSize);
 
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint = {};
+	UINT nNumRows = 0;
+	UINT64 nRowSizeInBytes = 0;
+	UINT64 nRequiredSize = 0;
+	this->m_dev->GetCopyableFootprints(&resDesc, 0, 1, 0, &footprint, &nNumRows, &nRowSizeInBytes, &nRequiredSize);
+
+	D3D12_HEAP_PROPERTIES uploadHeapProps = { };
+	uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+	D3D12_RESOURCE_DESC buffDesc = { };
+	buffDesc.DepthOrArraySize = 1;
+	buffDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	buffDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	buffDesc.Height = 1;
+	buffDesc.Width = nRequiredSize;
+	buffDesc.MipLevels = 1;
+	buffDesc.SampleDesc.Count = 1;
+	buffDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	ComPtr<ID3D12Resource> scratchResource;
+	ThrowIfFailed(this->m_dev->CreateCommittedResource(
+		&uploadHeapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&buffDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(scratchResource.GetAddressOf())
+	));
+
+	scratchResource->SetName(L"Temporal Resource");
+
+	/* Map the data to the Scratch buffer */
+	PVOID pMap = nullptr;
+	ThrowIfFailed(scratchResource->Map(0, nullptr, &pMap));
+	const UINT srcRowPitch = rowPitch;
+	const UINT dstRowPitch = footprint.Footprint.RowPitch;
+	BYTE* dst = reinterpret_cast<BYTE*>(pMap);
+	BYTE* src = decodedData.get();
+
+	for (UINT y = 0; y < height; ++y) {
+		memcpy(dst + y * dstRowPitch, src + y * srcRowPitch, srcRowPitch);
+	}
+	scratchResource->Unmap(NULL, nullptr);
+
+	/* Copy texture from Scratch buffer to the Texture resource */
+	D3D12_TEXTURE_COPY_LOCATION dstLoc = { };
+	dstLoc.pResource = tex.Get();
+	dstLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+	dstLoc.SubresourceIndex = 0;
+
+	D3D12_TEXTURE_COPY_LOCATION srcLoc = { };
+	srcLoc.pResource = scratchResource.Get();
+	srcLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+	srcLoc.PlacedFootprint = footprint;
+
+	this->m_list->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
+
+	D3D12* d3d12 = reinterpret_cast<D3D12*>(this->m_renderer);
+	d3d12->ResourceBarrier(tex.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	ThrowIfFailed(this->m_list->Close());
+
 	*resource = tex.Get();
+}
+
+void ResourceManager::UploadTexture() {
+
+	ID3D12CommandList* commandLists[] = {
+		this->m_list.Get()
+	};
+
+	D3D12* d3d12 = reinterpret_cast<D3D12*>(this->m_renderer);
+	d3d12->m_queue->ExecuteCommandLists(1, commandLists);
+
+	HRESULT reason = this->m_dev->GetDeviceRemovedReason();
+	if (FAILED(reason)) {
+		printf("DEVICE REMOVED BEFORE CreateFence. Reason = 0x%08X\n", reason);
+	}
+
+	ComPtr<ID3D12Fence> fence;
+	ThrowIfFailed(this->m_dev->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence.GetAddressOf())));
+
+	HANDLE gpuCompletedEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	if (!gpuCompletedEvent) {
+		throw std::runtime_error("Failed to create GPU event.");
+	}
+
+	const UINT64 fenceValue = 1;
+
+	d3d12->m_queue->Signal(fence.Get(), fenceValue);
+
+	if (fence->GetCompletedValue() < fenceValue) {
+		ThrowIfFailed(fence->SetEventOnCompletion(fenceValue, gpuCompletedEvent));
+		WaitForSingleObject(gpuCompletedEvent, INFINITE);
+	}
+
+	CloseHandle(gpuCompletedEvent);
 }
 
 ResourceManager* ResourceManager::GetInstance() {
