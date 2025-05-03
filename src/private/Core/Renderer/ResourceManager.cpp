@@ -6,6 +6,10 @@ ResourceManager::ResourceManager() {
 
 }
 
+void ResourceManager::LoadTexture(ID3D12Resource** resource) {
+
+}
+
 ResourceManager* ResourceManager::GetInstance() {
 	if (ResourceManager::m_instance == nullptr)
 		ResourceManager::m_instance = new ResourceManager();
