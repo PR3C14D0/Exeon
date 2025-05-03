@@ -1,5 +1,6 @@
 #include "Core/GameObject/Component/Mesh.h"
 #include "Core/Core.h"
+#include "Core/Renderer/ResourceManager.h"
 
 Mesh::Mesh(std::string name) : Component::Component(name) {
 	this->m_core = Core::GetInstance();
@@ -77,7 +78,8 @@ void Mesh::LoadModel(std::string filename) {
 		aiString texPath;
 		if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0 && material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
 			const aiTexture* texture = scene->GetEmbeddedTexture(texPath.C_Str());
-
+			ResourceManager* resMgr = ResourceManager::GetInstance();
+			resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, nullptr);
 		}
 	}
 }

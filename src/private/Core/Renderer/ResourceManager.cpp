@@ -61,6 +61,21 @@ void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12
 	ThrowIfFailed(this->m_factory->CreateStream(stream.GetAddressOf()));
 
 	ThrowIfFailed(stream->InitializeFromMemory(const_cast<uint8_t*>(pData), dwDataSize));
+
+	std::cout << "[DEBUG] ResourceManager: Stream initialized for texture loading." << std::endl;
+
+	ComPtr<IWICBitmapDecoder> decoder;
+	ThrowIfFailed(this->m_factory->CreateDecoderFromStream(stream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, decoder.GetAddressOf()));
+
+	std::cout << "[DEBUG] ResourceManager: Bitmap decoder initialized for texture loading." << std::endl;
+
+	ComPtr<IWICBitmapFrameDecode> frame;
+	ThrowIfFailed(decoder->GetFrame(0, frame.GetAddressOf()));
+
+	std::cout << "[DEBUG] ResourceManager: Bitmap frame initialized for texture loading." << std::endl;
+
+	std::unique_ptr<uint8_t[]> decodedData;
+	D3D12_SUBRESOURCE_DATA initData;
 }
 
 ResourceManager* ResourceManager::GetInstance() {
