@@ -300,7 +300,28 @@ void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12
 		/* If size is not the same, resize it */
 
 		ComPtr<IWICBitmapScaler> scaler;
+		ThrowIfFailed(this->m_factory->CreateBitmapScaler(scaler.GetAddressOf()));
 
+		ThrowIfFailed(scaler->Initialize(frame.Get(), width, height, WICBitmapInterpolationModeFant));
+
+		WICPixelFormatGUID pfScaler;
+		ThrowIfFailed(scaler->GetPixelFormat(&pfScaler));
+
+
+		if (memcmp(&convertGUID, &pfScaler, sizeof(GUID)) == 0) {
+			ThrowIfFailed(scaler->CopyPixels(nullptr, static_cast<UINT>(rowPitch), static_cast<UINT>(imageSize), decodedData.get()));
+		}
+		else {
+			ComPtr<IWICFormatConverter> FC;
+			ThrowIfFailed(this->m_factory->CreateFormatConverter(FC.GetAddressOf()));
+
+			BOOL bCanConvert = FALSE;
+			ThrowIfFailed(FC->CanConvert(pfScaler, convertGUID, &bCanConvert));
+
+			ThrowIfFailed(FC->Initialize(scaler.Get(), convertGUID, WICBitmapDitherTypeErrorDiffusion, nullptr, 0, WICBitmapPaletteTypeMedianCut));
+
+			ThrowIfFailed(FC->CopyPixels(nullptr, static_cast<UINT>(rowPitch), static_cast<UINT>(imageSize), decodedData.get()));
+		}
 	}
 }
 
