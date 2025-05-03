@@ -14,9 +14,12 @@ ResourceManager::ResourceManager() {
 
 void ResourceManager::D3D12Impl(D3D12* renderer) {
 	renderer->GetDevice(this->m_dev);
-	renderer->GetCommandList(this->m_list);
 	
 	ThrowIfFailed(this->m_dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(this->m_alloc.GetAddressOf())));
+	this->m_alloc->SetName(L"ResourceManager command allocator");
+
+	ThrowIfFailed(this->m_dev->CreateCommandList(1, D3D12_COMMAND_LIST_TYPE_DIRECT, this->m_alloc.Get(), nullptr, IID_PPV_ARGS(this->m_list.GetAddressOf())));
+	this->m_list->SetName(L"ResourceManager Graphics Command List");
 }
 
 void ResourceManager::Init() {
