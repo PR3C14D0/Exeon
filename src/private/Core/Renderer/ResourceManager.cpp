@@ -76,6 +76,30 @@ void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12
 
 	std::unique_ptr<uint8_t[]> decodedData;
 	D3D12_SUBRESOURCE_DATA initData;
+
+	UINT nWidth, nHeight;
+	ThrowIfFailed(frame->GetSize(&nWidth, &nHeight));
+
+	/* https://learn.microsoft.com/en-us/windows/win32/api/d3d12video/ns-d3d12video-d3d12_video_size_range */
+	size_t maxSize = size_t(D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION);
+
+	UINT width = nWidth;
+	UINT height = nHeight;
+
+	/* If image is bigger than the max size allowed, clamp it. */
+	if (nWidth > maxSize || nHeight > maxSize) {
+		const float aspectRatio = static_cast<float>(nHeight) / static_cast<float>(nWidth);
+		if (nWidth > nHeight) {
+			width = static_cast<UINT>(maxSize);
+			height = std::max<UINT>(1, static_cast<UINT>(static_cast<float>(maxSize) * aspectRatio));
+		}
+		else {
+			height = static_cast<UINT>(maxSize);
+			width = std::max<UINT>(1, static_cast<UINT>(static_cast<float>(maxSize) * aspectRatio));
+		}
+	}
+
+
 }
 
 ResourceManager* ResourceManager::GetInstance() {
