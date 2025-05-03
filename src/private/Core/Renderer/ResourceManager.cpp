@@ -27,26 +27,40 @@ void ResourceManager::D3D12Impl(D3D12* renderer) {
 	
 	ThrowIfFailed(this->m_dev->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(this->m_alloc.GetAddressOf())));
 	this->m_alloc->SetName(L"ResourceManager command allocator");
+	std::cout << "[DEBUG] ResourceManager: ID3D12CommandAllocator initialized" << std::endl;
+
 
 	ThrowIfFailed(this->m_dev->CreateCommandList(1, D3D12_COMMAND_LIST_TYPE_DIRECT, this->m_alloc.Get(), nullptr, IID_PPV_ARGS(this->m_list.GetAddressOf())));
 	this->m_list->SetName(L"ResourceManager Graphics Command List");
+	std::cout << "[DEBUG] ResourceManager: ID3D12GraphicsCommandList initialized" << std::endl;
 
 	static INIT_ONCE initOnce = INIT_ONCE_STATIC_INIT;
 	IWICImagingFactory2* factory = nullptr;
 	InitOnceExecuteOnce(&initOnce, InitWICFactory, nullptr, reinterpret_cast<LPVOID*>(&factory));
 	this->m_factory.Attach(factory);
+
+	std::cout << "[DEBUG] ResourceManager: IWICImagingFactory2 initialized" << std::endl;
 }
 
 void ResourceManager::Init() {
 
 }
 
-void ResourceManager::LoadTexture(ID3D12Resource** resource) {
+void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12Resource** resource) {
 	if (resource) {
 		*resource = nullptr;
 	}
 
+	if (!this->m_factory) {
+		std::cout << "[ERROR] ResourceManager: IWICImagingFactory2 not initialized." << std::endl;
+		return;
+	}
 
+	ComPtr<IWICStream> stream;
+
+	ThrowIfFailed(this->m_factory->CreateStream(stream.GetAddressOf()));
+
+	ThrowIfFailed(stream->InitializeFromMemory(const_cast<uint8_t*>(pData), dwDataSize));
 }
 
 ResourceManager* ResourceManager::GetInstance() {

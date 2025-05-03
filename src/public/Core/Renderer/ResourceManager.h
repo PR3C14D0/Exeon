@@ -30,6 +30,6 @@ public:
 
 	void Init();
 
-	void LoadTexture(ID3D12Resource** resource);
+	void LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12Resource** resource);
 	static ResourceManager* GetInstance();
 };
