@@ -81,7 +81,6 @@ void Mesh::LoadModel(std::string filename) {
 			ResourceManager* resMgr = ResourceManager::GetInstance();
 			ComPtr<ID3D12Resource> resource;
 			resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, resource.GetAddressOf());
-			resMgr->UploadTexture();
 		}
 	}
 }
