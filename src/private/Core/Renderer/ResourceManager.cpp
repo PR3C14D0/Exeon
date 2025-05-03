@@ -273,7 +273,35 @@ void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12
 		ThrowIfFailed(pfInfo->GetBitsPerPixel(&bpp));
 	}
 
-	
+	const uint64_t rowBytes = (uint64_t(width) * uint64_t(bpp) + 7u) / 8u;
+	const uint64_t numBytes = rowBytes * uint64_t(height);
+
+	if (rowBytes > UINT32_MAX || numBytes > UINT32_MAX) {
+		std::cout << "[ERROR] ResourceManager: Arithmetic overflow." << std::endl;
+		return;
+	}
+
+	const size_t rowPitch = static_cast<size_t>(rowBytes);
+	const size_t imageSize = static_cast<size_t>(numBytes);
+
+	decodedData.reset(new (std::nothrow) uint8_t[imageSize]);
+
+	if (!decodedData) {
+		std::cout << "[ERROR] ResourceManager: Out of memory" << std::endl;
+		return;
+	}
+
+	if (memcmp(&convertGUID, &pixelFormat, sizeof(GUID)) == 0
+		&& width == nWidth
+		&& height == nHeight) {
+		ThrowIfFailed(frame->CopyPixels(nullptr, static_cast<UINT>(rowPitch), static_cast<UINT>(imageSize), decodedData.get()));
+	}
+	else if (width != nWidth || height != nHeight) {
+		/* If size is not the same, resize it */
+
+		ComPtr<IWICBitmapScaler> scaler;
+
+	}
 }
 
 ResourceManager* ResourceManager::GetInstance() {
