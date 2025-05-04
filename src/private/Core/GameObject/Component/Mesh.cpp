@@ -1,6 +1,7 @@
 #include "Core/GameObject/Component/Mesh.h"
 #include "Core/Core.h"
 #include "Core/Renderer/ResourceManager.h"
+#include "Core/Renderer/DescriptorHeap.h"
 
 Mesh::Mesh(std::string name) : Component::Component(name) {
 	this->m_core = Core::GetInstance();
@@ -12,6 +13,9 @@ Mesh::Mesh(std::string name) : Component::Component(name) {
 
 	this->m_bMeshLoaded = false;
 	this->m_nTotalVertices = 0;
+	this->m_nSamplerIndex = -1; // I put -1 cuz 0 can actually be occupied.
+	this->m_nTotalVertices = 0;
+	this->m_shader = nullptr;
 }
 
 void Mesh::Init() {
@@ -74,9 +78,15 @@ void Mesh::Render() {
 	this->m_list->SetPipelineState(this->m_plState.Get());
 	this->m_list->SetGraphicsRootSignature(this->m_rootSig.Get());
 
+	this->m_list->SetGraphicsRootDescriptorTable(0, this->m_samplerDescriptor.gpuHandle);
+
 	int i = 0;
 	for (D3D12_VERTEX_BUFFER_VIEW vbv : this->m_VBVs) {
 		this->m_list->IASetVertexBuffers(0, 1, &vbv);
+
+		UINT nTextureIndex = this->m_textureIndices[i];
+		Descriptor texDesc = this->m_cbv_srvHeap->GetDescriptor(nTextureIndex);
+		this->m_list->SetGraphicsRootDescriptorTable(1, texDesc.gpuHandle);
 
 		this->m_list->DrawInstanced(this->m_vertices[i].size(), 1, 0, 0);
 		i++;
@@ -90,9 +100,24 @@ void Mesh::InitPipeline() {
 	UINT nVertexSize = this->m_shader->GetBuffer(SHADER_BUFFER::VERTEX, lpVertex);
 	UINT nPixelSize = this->m_shader->GetBuffer(SHADER_BUFFER::PIXEL, lpPixel);
 
+	CD3DX12_DESCRIPTOR_RANGE albedoRange;
+	CD3DX12_DESCRIPTOR_RANGE samplerRange;
+	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
+	samplerRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, 0);
+
+	CD3DX12_ROOT_PARAMETER albedoParam;
+	CD3DX12_ROOT_PARAMETER samplerParam;
+	albedoParam.InitAsDescriptorTable(1, &albedoRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	samplerParam.InitAsDescriptorTable(1, &samplerRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	
+	D3D12_ROOT_PARAMETER rootParams[] = {
+		samplerParam,
+		albedoParam
+	};
+
 	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
-	rootDesc.pParameters = nullptr;
-	rootDesc.NumParameters = 0;
+	rootDesc.pParameters = rootParams;
+	rootDesc.NumParameters = _countof(rootParams);
 	rootDesc.pStaticSamplers = nullptr;
 	rootDesc.NumStaticSamplers = 0;
 	rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -155,6 +180,45 @@ void Mesh::D3D12Init(D3D12* renderer) {
 
 	this->UploadVertices();
 	this->InitPipeline();
+	this->InitSampler(renderer);
+}
+
+void Mesh::InitSampler(D3D12* renderer) {
+	this->m_cbv_srvHeap = renderer->m_cbvSrvHeap;
+	UINT nNumTextures = this->m_textures.size();
+	this->m_cbv_srvHeap->Allocate(this->m_textures.size());
+	UINT nLastIndex = m_cbv_srvHeap->GetLastDescriptorIndex();
+	UINT nFirstIndex = nLastIndex - nNumTextures;
+
+	UINT nActualIndex = nFirstIndex;
+	for (std::pair<UINT, ComPtr<ID3D12Resource>> resource : this->m_textures) {
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format = resource.second->GetDesc().Format;
+
+		Descriptor resDesc = m_cbv_srvHeap->GetDescriptor(nActualIndex);
+		this->m_textureIndices[resource.first] = nActualIndex;
+		nActualIndex++;
+
+		this->m_dev->CreateShaderResourceView(resource.second.Get(), &srvDesc, resDesc.cpuHandle);
+	}
+
+	renderer->m_samplerHeap->Allocate(1);
+	this->m_nSamplerIndex = renderer->m_samplerHeap->GetLastDescriptorIndex();
+	this->m_samplerDescriptor = renderer->m_samplerHeap->GetDescriptor(this->m_nSamplerIndex);
+
+	D3D12_SAMPLER_DESC samplerDesc = { };
+	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NONE;
+	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+	samplerDesc.MaxAnisotropy = 1;
+
+	this->m_dev->CreateSampler(&samplerDesc, this->m_samplerDescriptor.cpuHandle);
 }
 
 /*

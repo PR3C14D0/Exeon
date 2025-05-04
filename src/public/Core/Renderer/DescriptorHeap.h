@@ -9,6 +9,7 @@
 using namespace Microsoft::WRL;
 
 class DescriptorHeap {
+	friend class D3D12;
 private:
 	UINT m_nDescriptors;
 	

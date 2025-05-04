@@ -13,6 +13,7 @@
 
 #include "Core/GameObject/Component/Component.h"
 #include "Core/Renderer/Shader.h"
+#include "Core/Renderer/Descriptor.h"
 
 using namespace Microsoft::WRL;
 
@@ -20,6 +21,7 @@ using namespace Microsoft::WRL;
 class Core;
 class Renderer;
 class D3D12;
+class DescriptorHeap;
 
 class Mesh : public Component {
 private:
@@ -39,6 +41,7 @@ private:
 	std::map<UINT, std::vector<Vertex>> m_vertices;
 	std::map<UINT, std::vector<UINT>> m_indices;
 	std::map <UINT, ComPtr<ID3D12Resource>> m_textures;
+	std::map<UINT, UINT> m_textureIndices;
 
 	std::vector<D3D12_VERTEX_BUFFER_VIEW> m_VBVs;
 
@@ -50,10 +53,15 @@ private:
 
 	ComPtr<ID3D12RootSignature> m_rootSig;
 
+	DescriptorHeap* m_cbv_srvHeap;
+	Descriptor m_samplerDescriptor;
+	UINT m_nSamplerIndex;
+
 	UINT m_nTotalVertices;
 
 	void UploadVertices();
 	void InitPipeline();
+	void InitSampler(D3D12* renderer);
 public:
 	Mesh(std::string name);
 

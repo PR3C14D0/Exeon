@@ -12,6 +12,7 @@ D3D12::D3D12() : Renderer::Renderer() {
 	this->m_nUVIndex = 0;
 	this->m_nPositionIndex = 0;
 	this->sceneMgr = SceneManager::GetInstance();
+	this->m_samplerHeap = nullptr;
 }
 
 void D3D12::Init(HWND hwnd) {
@@ -68,6 +69,9 @@ void D3D12::Init(HWND hwnd) {
 	//this->m_sc->SetFullscreenState(TRUE, nullptr);
 
 	this->m_rtvHeap = new DescriptorHeap(2, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false);
+
+	/* Initialize a new Sampler descriptor heap with 1 descriptor for the moment */
+	this->m_samplerHeap = new DescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, true);
 
 	for (int i = 0; i < this->m_nBackBuffers; i++) {
 		ComPtr<ID3D12Resource> buff;
@@ -217,6 +221,12 @@ void D3D12::Update() {
 		positionDesc.cpuHandle
 	};
 	this->m_list->OMSetRenderTargets(_countof(gbuffers), gbuffers, FALSE, &dsvDesc.cpuHandle);
+
+	ID3D12DescriptorHeap* descriptorHeaps[] = {
+		this->m_cbvSrvHeap->m_heap.Get(),
+		this->m_samplerHeap->m_heap.Get()
+	};
+	this->m_list->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	this->sceneMgr->Render();
 
