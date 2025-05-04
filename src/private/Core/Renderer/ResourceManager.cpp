@@ -25,7 +25,7 @@ void ResourceManager::GetResource(std::string resource, ComPtr<ID3D12Resource>& 
 		res = this->m_resources[resource];
 	}
 	else {
-		
+		spdlog::error("Resource{0} not found", resource);
 	}
 }
 
@@ -45,12 +45,30 @@ bool ResourceManager::ResourceExists(std::string resource) {
 	return bRet;
 }
 
-void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::string texName, ID3D12Resource** resource) {
+void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::string texName, ComPtr<ID3D12Resource>& resource) {
+	if (!this->AddResource(texName, resource)) {
+		spdlog::error("Error adding resource {0} to the resource manager", texName);
+		return;
+	}
+
 	DirectX::ResourceUploadBatch batch(this->m_dev.Get());
 	batch.Begin(D3D12_COMMAND_LIST_TYPE_DIRECT);
-	ThrowIfFailed(DirectX::CreateWICTextureFromMemory(this->m_dev.Get(), batch, pData, dwDataSize, resource));
+	ThrowIfFailed(DirectX::CreateWICTextureFromMemory(this->m_dev.Get(), batch, pData, dwDataSize, resource.GetAddressOf()));
 	D3D12* d3d12 = reinterpret_cast<D3D12*>(this->m_renderer);
 	batch.End(d3d12->m_queue.Get());
+}
+
+bool ResourceManager::AddResource(std::string resource, ComPtr<ID3D12Resource>& res) {
+	if (ResourceExists(resource)) {
+		spdlog::error("Resource with name {0} already exists. Aborting", resource);
+		return false;
+	}
+
+	spdlog::debug("Adding resource {0} to the resource manager.", resource);
+	this->m_resources[resource] = res;
+	spdlog::info("Resource wiht name {0} added to the resource manager.", resource);
+
+	return true;
 }
 
 ResourceManager* ResourceManager::GetInstance() {

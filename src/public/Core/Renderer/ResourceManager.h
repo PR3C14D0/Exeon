@@ -41,7 +41,8 @@ public:
 
 	void GetResource(std::string resource, ComPtr<ID3D12Resource>& res);
 	bool ResourceExists(std::string resource);
+	bool AddResource(std::string resource, ComPtr<ID3D12Resource>& res);
 
-	void LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::string texName, ID3D12Resource** resource);
+	void LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::string texName, ComPtr<ID3D12Resource>& resource);
 	static ResourceManager* GetInstance();
 };
