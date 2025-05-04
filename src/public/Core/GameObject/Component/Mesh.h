@@ -2,6 +2,7 @@
 #include <iostream>
 #include <Windows.h>
 #include <d3d12.h>
+#include <DirectXTK/d3dx12.h>
 #include <wrl.h>
 #include <vector>
 #include <assimp/scene.h>
@@ -44,6 +45,10 @@ private:
 	std::map<UINT, ComPtr<ID3D12Resource>> m_VBOs;
 	std::map<UINT, ComPtr<ID3D12Resource>> m_IBOs;
 	Shader* m_shader;
+
+	ComPtr<ID3D12PipelineState> m_plState;
+
+	ComPtr<ID3D12RootSignature> m_rootSig;
 
 	UINT m_nTotalVertices;
 

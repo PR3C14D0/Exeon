@@ -23,7 +23,7 @@ struct PixelOutput
 PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {
     PixelOutput output;
-    output.albedo = float4(0.f, 0.f, 0.f, 1.f);
+    output.albedo = float4(1.f, 0.f, 0.f, 1.f);
     output.normal = float4(0.f, 0.f, 0.f, 1.f);
     return output;
 }

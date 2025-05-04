@@ -24,13 +24,11 @@ void Shader::D3D12Shader(const char* shader, const char* vertexShader, const cha
 
 	if (vertexError) {
 		spdlog::error("{0}", (char*)vertexError->GetBufferPointer());
-		delete this;
 		return;
 	}
 
 	if (pixelError) {
 		spdlog::error("{0}", (char*)pixelError->GetBufferPointer());
-		delete this;
 		return;
 	}
 

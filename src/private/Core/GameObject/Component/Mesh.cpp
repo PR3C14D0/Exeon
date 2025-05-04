@@ -71,12 +71,16 @@ void Mesh::Update() {
 
 void Mesh::Render() {
 	this->m_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	this->m_list->IASetVertexBuffers(0, this->m_VBVs.size(), &this->m_VBVs[0]);
+	this->m_list->SetPipelineState(this->m_plState.Get());
+	this->m_list->SetGraphicsRootSignature(this->m_rootSig.Get());
 
-	this->m_list->DrawInstanced(this->m_nTotalVertices, 1, 0, 0);
-	//for (D3D12_VERTEX_BUFFER_VIEW vbv : this->m_VBVs) {
-	//	//this->m_list->DrawInstanced(nVertexCount, )
-	//}
+	int i = 0;
+	for (D3D12_VERTEX_BUFFER_VIEW vbv : this->m_VBVs) {
+		this->m_list->IASetVertexBuffers(0, 1, &vbv);
+
+		this->m_list->DrawInstanced(this->m_vertices[i].size(), 1, 0, 0);
+		i++;
+	}
 }
 
 void Mesh::InitPipeline() {
@@ -84,7 +88,7 @@ void Mesh::InitPipeline() {
 
 	LPVOID lpVertex, lpPixel = nullptr;
 	UINT nVertexSize = this->m_shader->GetBuffer(SHADER_BUFFER::VERTEX, lpVertex);
-	UINT nPixelSize = this->m_shader->GetBuffer(SHADER_BUFFER::VERTEX, lpVertex);
+	UINT nPixelSize = this->m_shader->GetBuffer(SHADER_BUFFER::PIXEL, lpPixel);
 
 	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
 	rootDesc.pParameters = nullptr;
@@ -101,12 +105,47 @@ void Mesh::InitPipeline() {
 		return;
 	}
 
-	D3D12_INPUT_ELEMENT_DESC layout[] = {
+	ThrowIfFailed(this->m_dev->CreateRootSignature(0, rsBlob->GetBufferPointer(), rsBlob->GetBufferSize(), IID_PPV_ARGS(this->m_rootSig.GetAddressOf())));
+
+	D3D12_INPUT_ELEMENT_DESC elements[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL }
 	};
 
+	D3D12_INPUT_LAYOUT_DESC layout = { };
+	layout.pInputElementDescs = elements;
+	layout.NumElements = _countof(elements);
+
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC plDesc = { };
+	plDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	plDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	plDesc.DepthStencilState.DepthEnable = TRUE;
+	plDesc.DepthStencilState.StencilEnable = FALSE;
+	plDesc.InputLayout = layout;
+	plDesc.VS.pShaderBytecode = lpVertex;
+	plDesc.VS.BytecodeLength = nVertexSize;
+	plDesc.PS.pShaderBytecode = lpPixel;
+	plDesc.PS.BytecodeLength = nPixelSize;
+	plDesc.pRootSignature = this->m_rootSig.Get();
+	plDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	plDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	plDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+	plDesc.RTVFormats[1] = DXGI_FORMAT_B8G8R8A8_UNORM;
+	plDesc.RTVFormats[2] = DXGI_FORMAT_B8G8R8A8_UNORM;
+	plDesc.NumRenderTargets = 3;
+	plDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	plDesc.SampleDesc.Count = 8;
+	plDesc.SampleMask = UINT32_MAX;
+
+	spdlog::debug("Vertex Shader Size: {}", nVertexSize);
+	spdlog::debug("Pixel Shader Size: {}", nPixelSize);
+
+	ThrowIfFailed(this->m_dev->CreateGraphicsPipelineState(&plDesc, IID_PPV_ARGS(this->m_plState.GetAddressOf())));
+	this->m_plState->SetName(L"Mesh pipeline state");
+
+	spdlog::debug("{0}: Pipeline state created.", this->m_name);
 }
 
 void Mesh::D3D12Init(D3D12* renderer) {
