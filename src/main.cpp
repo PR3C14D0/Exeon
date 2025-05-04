@@ -3,6 +3,7 @@
 #define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 #include "Core/Core.h"
+#include "resource.h"
 
 bool g_bQuit = false;
 
@@ -24,6 +25,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wc.lpszClassName = CLASS_NAME;
 	wc.hInstance = hInstance;
 	wc.lpfnWndProc = WndProc;
+	wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
 
 	RegisterClass(&wc);
 		
