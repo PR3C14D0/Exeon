@@ -8,7 +8,7 @@ Mesh::Mesh(std::string name) : Component::Component(name) {
 	this->m_dev = nullptr;
 	this->m_list = nullptr;
 
-	this->m_renderer = nullptr;
+	this->m_renderer = this->m_core->GetRenderer();
 
 	this->m_bMeshLoaded = false;
 }
@@ -16,11 +16,30 @@ Mesh::Mesh(std::string name) : Component::Component(name) {
 void Mesh::Init() {
 	Component::Init();
 
-	this->m_renderer = this->m_core->GetRenderer();
 
 	if (D3D12* d3d12 = dynamic_cast<D3D12*>(this->m_renderer)) {
 		this->D3D12Init(d3d12);
 	}
+}
+
+void Mesh::UploadVertices() {
+	D3D12* d3d12 = dynamic_cast<D3D12*>(this->m_renderer);
+
+	if (!d3d12) {
+		spdlog::error("{0}: Failed uploading vertices. D3D12 Renderer not initialized.", this->m_name);
+		throw std::exception();
+		return;
+	}
+
+	spdlog::debug("{0}: Uploading vertices to GPU.", this->m_name);
+	for (std::pair<UINT, std::vector<Vertex>> object : this->m_vertices) {
+		ComPtr<ID3D12Resource> VBO;
+		d3d12->CreateBuffer(&object.second[0], object.second.size() * sizeof(Vertex), VBO);
+		VBO->SetName(L"StaticMesh VBO");
+		spdlog::debug("{0}: {1:d} vertices uploaded for mesh {2:d}", this->m_name, object.second.size(), object.first);
+	}
+
+	spdlog::debug("{0}: Vertex Buffer Object initialized", this->m_name);
 }
 
 void Mesh::Update() {
@@ -33,7 +52,7 @@ void Mesh::D3D12Init(D3D12* renderer) {
 	renderer->GetDevice(this->m_dev);
 	renderer->GetCommandList(this->m_list);
 
-
+	this->UploadVertices();
 }
 
 /*
@@ -80,7 +99,8 @@ void Mesh::LoadModel(std::string filename) {
 			const aiTexture* texture = scene->GetEmbeddedTexture(texPath.C_Str());
 			ResourceManager* resMgr = ResourceManager::GetInstance();
 			ComPtr<ID3D12Resource> resource;
-			resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, texture->mFilename.C_Str(), resource.GetAddressOf());
+			resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, texture->mFilename.C_Str(), resource);
+			this->m_textures[i] = resource;
 		}
 	}
 }

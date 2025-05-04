@@ -35,6 +35,12 @@ private:
 	bool m_bMeshLoaded;
 
 	std::map<UINT, std::vector<Vertex>> m_vertices;
+	std::map <UINT, ComPtr<ID3D12Resource>> m_textures;
+
+	std::map<UINT, ComPtr<ID3D12Resource>> m_VBOs;
+	std::map<UINT, ComPtr<ID3D12Resource>> m_IBOs;
+
+	void UploadVertices();
 public:
 	Mesh(std::string name);
 

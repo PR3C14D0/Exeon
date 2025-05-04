@@ -66,7 +66,7 @@ bool ResourceManager::AddResource(std::string resource, ComPtr<ID3D12Resource>& 
 
 	spdlog::debug("Adding resource {0} to the resource manager.", resource);
 	this->m_resources[resource] = res;
-	spdlog::info("Resource wiht name {0} added to the resource manager.", resource);
+	spdlog::info("Resource with name {0} added to the resource manager.", resource);
 
 	return true;
 }
