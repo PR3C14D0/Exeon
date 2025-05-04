@@ -102,8 +102,8 @@ void Mesh::InitPipeline() {
 
 	CD3DX12_DESCRIPTOR_RANGE albedoRange;
 	CD3DX12_DESCRIPTOR_RANGE samplerRange;
-	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0);
-	samplerRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0, 0);
+	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	samplerRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
 
 	CD3DX12_ROOT_PARAMETER albedoParam;
 	CD3DX12_ROOT_PARAMETER samplerParam;
@@ -188,7 +188,7 @@ void Mesh::InitSampler(D3D12* renderer) {
 	UINT nNumTextures = this->m_textures.size();
 	this->m_cbv_srvHeap->Allocate(this->m_textures.size());
 	UINT nLastIndex = m_cbv_srvHeap->GetLastDescriptorIndex();
-	UINT nFirstIndex = nLastIndex - nNumTextures;
+	UINT nFirstIndex = nLastIndex - nNumTextures + 1;
 
 	UINT nActualIndex = nFirstIndex;
 	for (std::pair<UINT, ComPtr<ID3D12Resource>> resource : this->m_textures) {

@@ -63,31 +63,55 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 
 	this->m_shader = new Shader("LightPass.hlsl", "VertexMain", "PixelMain");
 
-	Descriptor srvDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
+	Descriptor albedoDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
+	Descriptor normalDesc = renderer->m_cbvSrvHeap->GetDescriptor(1);
+	Descriptor positionDesc = renderer->m_cbvSrvHeap->GetDescriptor(2);
 
-	D3D12_DESCRIPTOR_RANGE gBufferRange = { };
-	gBufferRange.NumDescriptors = 3;
-	gBufferRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	gBufferRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
+	srvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+	this->m_dev->CreateShaderResourceView(renderer->m_albedoBuff.Get(), &srvDesc, albedoDesc.cpuHandle);
+	this->m_dev->CreateShaderResourceView(renderer->m_uvBuff.Get(), &srvDesc, normalDesc.cpuHandle);
+	this->m_dev->CreateShaderResourceView(renderer->m_positionBuff.Get(), &srvDesc, positionDesc.cpuHandle);
+
+	CD3DX12_DESCRIPTOR_RANGE albedoRange;
+	CD3DX12_DESCRIPTOR_RANGE normalRange;
+	CD3DX12_DESCRIPTOR_RANGE positionRange;
+
+	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	normalRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+	positionRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+
+	CD3DX12_ROOT_PARAMETER albedoParam;
+	CD3DX12_ROOT_PARAMETER normalParam;
+	CD3DX12_ROOT_PARAMETER positionParam;
+	albedoParam.InitAsDescriptorTable(1, &albedoRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	normalParam.InitAsDescriptorTable(1, &normalRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	positionParam.InitAsDescriptorTable(1, &positionRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	
-	D3D12_ROOT_DESCRIPTOR_TABLE rootTable = { };
-	rootTable.NumDescriptorRanges = 1;
-	rootTable.pDescriptorRanges = &gBufferRange;
-
-	D3D12_ROOT_PARAMETER rootParams = { };
-	rootParams.DescriptorTable = rootTable;
-	rootParams.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	rootParams.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	D3D12_ROOT_PARAMETER rootParams[] = {
+		albedoParam,
+		normalParam,
+		positionParam
+	};
 
 	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
-	rootDesc.NumParameters = 1;
-	rootDesc.pParameters = &rootParams;
+	rootDesc.NumParameters = _countof(rootParams);
+	rootDesc.pParameters = rootParams;
 	rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	rootDesc.pStaticSamplers = nullptr;
 	rootDesc.NumStaticSamplers = 0;
 
-	ComPtr<ID3DBlob> rootBlob;
-	ThrowIfFailed(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, rootBlob.GetAddressOf(), nullptr));
+	ComPtr<ID3DBlob> rootBlob, rootErr;
+	ThrowIfFailed(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, rootBlob.GetAddressOf(), rootErr.GetAddressOf()));
+
+	if (rootErr) {
+		spdlog::error("ScreenQuad: ", (char*)rootErr->GetBufferPointer());
+		return;
+	}
 
 	ThrowIfFailed(renderer->m_dev->CreateRootSignature(0, rootBlob->GetBufferPointer(), rootBlob->GetBufferSize(), IID_PPV_ARGS(this->m_rootSig.GetAddressOf())));
 
@@ -145,6 +169,9 @@ void ScreenQuad::Render() {
 } 
 
 void ScreenQuad::D3D12Render(D3D12* renderer) {
+	Descriptor albedoDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
+	Descriptor normalDesc = renderer->m_cbvSrvHeap->GetDescriptor(1);
+	Descriptor positionDesc = renderer->m_cbvSrvHeap->GetDescriptor(2);
 	this->m_list->OMSetRenderTargets(1, &this->m_rtvDescriptor.cpuHandle, FALSE, nullptr);
 	this->m_list->SetPipelineState(this->m_plState.Get());
 	this->m_list->ClearRenderTargetView(this->m_rtvDescriptor.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
@@ -153,6 +180,10 @@ void ScreenQuad::D3D12Render(D3D12* renderer) {
 	this->m_list->IASetVertexBuffers(0, 1, &this->m_VBV);
 	this->m_list->IASetIndexBuffer(&this->m_IBV);
 	this->m_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	
+	this->m_list->SetGraphicsRootDescriptorTable(0, albedoDesc.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(1, normalDesc.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(2, positionDesc.gpuHandle);
 
 	this->m_list->DrawIndexedInstanced(this->m_indices.size(), 1, 0, 0, 0);
 }

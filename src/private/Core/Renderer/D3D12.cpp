@@ -236,6 +236,11 @@ void D3D12::Update() {
 
 	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
+	ID3D12DescriptorHeap* sqDescriptorHeaps[] = {
+		this->m_cbvSrvHeap->m_heap.Get()
+	};
+	this->m_list->SetDescriptorHeaps(_countof(sqDescriptorHeaps), sqDescriptorHeaps);
+
 	/* We only call this method once per frame. */
 	this->m_screenQuad->Render();
 
