@@ -12,9 +12,11 @@ private:
 
 	std::vector<Component*> m_components;
 	Mesh* m_mesh;
+
 public:
 	GameObject(std::string name);
 
 	void Init();
 	void Update();
+	void Render();
 };

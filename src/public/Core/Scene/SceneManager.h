@@ -24,5 +24,7 @@ public:
 	Scene* GetScene(std::string name);
 	void AddScene(Scene* scene);
 
+	void Render();
+
 	void LoadScene(std::string name);
 };

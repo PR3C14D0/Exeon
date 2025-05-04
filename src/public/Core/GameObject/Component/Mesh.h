@@ -11,6 +11,7 @@
 #include "Util.h"
 
 #include "Core/GameObject/Component/Component.h"
+#include "Core/Renderer/Shader.h"
 
 using namespace Microsoft::WRL;
 
@@ -42,13 +43,19 @@ private:
 
 	std::map<UINT, ComPtr<ID3D12Resource>> m_VBOs;
 	std::map<UINT, ComPtr<ID3D12Resource>> m_IBOs;
+	Shader* m_shader;
+
+	UINT m_nTotalVertices;
 
 	void UploadVertices();
+	void InitPipeline();
 public:
 	Mesh(std::string name);
 
 	void Init();
 	void Update();
+
+	void Render();
 
 	void LoadModel(std::string filename);
 };

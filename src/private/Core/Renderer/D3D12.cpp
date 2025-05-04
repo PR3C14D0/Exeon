@@ -1,5 +1,6 @@
 #include "Core/Renderer/D3D12.h"
 #include "Core/Renderer/ScreenQuad.h"
+#include "Core/Scene/SceneManager.h"
 
 D3D12::D3D12() : Renderer::Renderer() {
 	this->m_nBackBuffers = 2;
@@ -10,6 +11,7 @@ D3D12::D3D12() : Renderer::Renderer() {
 	this->m_nAlbedoIndex = 0;
 	this->m_nUVIndex = 0;
 	this->m_nPositionIndex = 0;
+	this->sceneMgr = SceneManager::GetInstance();
 }
 
 void D3D12::Init(HWND hwnd) {
@@ -214,6 +216,8 @@ void D3D12::Update() {
 		positionDesc.cpuHandle
 	};
 	this->m_list->OMSetRenderTargets(_countof(gbuffers), gbuffers, FALSE, &dsv.cpuHandle);
+
+	this->sceneMgr->Render();
 
 	Descriptor rtv = this->m_rtvHeap->GetDescriptor(this->m_nActualBackBuffer);
 	this->m_list->OMSetRenderTargets(1, &rtv.cpuHandle, FALSE, nullptr);

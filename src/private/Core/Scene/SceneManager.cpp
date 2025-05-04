@@ -47,6 +47,10 @@ void SceneManager::LoadScene(std::string name) {
 	this->m_actualScene = this->m_scenes[name];
 }
 
+void SceneManager::Render() {
+	this->m_actualScene->Render();
+}
+
 SceneManager* SceneManager::GetInstance() {
 	if (SceneManager::m_instance == nullptr)
 		SceneManager::m_instance = new SceneManager();

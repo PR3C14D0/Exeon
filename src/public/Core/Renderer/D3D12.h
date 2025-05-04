@@ -18,12 +18,14 @@ enum VSYNC {
 };
 
 class ScreenQuad;
+class SceneManager;
 
 class D3D12 : public Renderer {
 	friend ScreenQuad;
 	friend class ResourceManager;
 	friend class Mesh;
 private:
+
 	ComPtr<IDXGIFactory4> m_factory;
 	ComPtr<IDXGIAdapter1> m_adapter;
 
@@ -66,6 +68,7 @@ private:
 	D3D12_RECT m_scissor;
 
 	ScreenQuad* m_screenQuad;
+	SceneManager* sceneMgr;
 
 	void ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState);
 

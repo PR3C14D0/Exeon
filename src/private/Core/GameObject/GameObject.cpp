@@ -19,3 +19,11 @@ void GameObject::Update() {
 		component->Update();
 	}
 }
+
+void GameObject::Render() {
+	for (Component* component : this->m_components) {
+		if (Mesh* mesh = dynamic_cast<Mesh*>(component)) {
+			mesh->Render();
+		}
+	}
+}

@@ -11,6 +11,7 @@ Mesh::Mesh(std::string name) : Component::Component(name) {
 	this->m_renderer = this->m_core->GetRenderer();
 
 	this->m_bMeshLoaded = false;
+	this->m_nTotalVertices = 0;
 }
 
 void Mesh::Init() {
@@ -66,7 +67,46 @@ void Mesh::UploadVertices() {
 void Mesh::Update() {
 	Component::Update();
 
+}
+
+void Mesh::Render() {
+	this->m_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	this->m_list->IASetVertexBuffers(0, this->m_VBVs.size(), &this->m_VBVs[0]);
+
+	this->m_list->DrawInstanced(this->m_nTotalVertices, 1, 0, 0);
+	//for (D3D12_VERTEX_BUFFER_VIEW vbv : this->m_VBVs) {
+	//	//this->m_list->DrawInstanced(nVertexCount, )
+	//}
+}
+
+void Mesh::InitPipeline() {
+	this->m_shader = new Shader("GBufferPass.hlsl", "VertexMain", "PixelMain");
+
+	LPVOID lpVertex, lpPixel = nullptr;
+	UINT nVertexSize = this->m_shader->GetBuffer(SHADER_BUFFER::VERTEX, lpVertex);
+	UINT nPixelSize = this->m_shader->GetBuffer(SHADER_BUFFER::VERTEX, lpVertex);
+
+	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
+	rootDesc.pParameters = nullptr;
+	rootDesc.NumParameters = 0;
+	rootDesc.pStaticSamplers = nullptr;
+	rootDesc.NumStaticSamplers = 0;
+	rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	ComPtr<ID3DBlob> rsBlob, rsErrBlob;
+	ThrowIfFailed(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1, rsBlob.GetAddressOf(), rsErrBlob.GetAddressOf()));
+
+	if (rsErrBlob) {
+		spdlog::error("{0}: Error serializing root signature. {1}", this->m_name, (char*)rsErrBlob->GetBufferPointer());
+		return;
+	}
+
+	D3D12_INPUT_ELEMENT_DESC layout[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL }
+	};
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC plDesc = { };
 }
 
 void Mesh::D3D12Init(D3D12* renderer) {
@@ -74,13 +114,17 @@ void Mesh::D3D12Init(D3D12* renderer) {
 	renderer->GetCommandList(this->m_list);
 
 	this->UploadVertices();
+	this->InitPipeline();
 }
 
 /*
 	Load a model from an FBX file with assimp.
 */
 void Mesh::LoadModel(std::string filename) {
-	if (this->m_bMeshLoaded) return;
+	if (this->m_bMeshLoaded) {
+		spdlog::error("{0}: Tried to load another file when meshes already loaded", this->m_name);
+		return;
+	};
 
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(filename, NULL);
@@ -89,6 +133,7 @@ void Mesh::LoadModel(std::string filename) {
 		aiMesh* mesh = scene->mMeshes[i];
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 		std::vector<Vertex> vertices;
+		this->m_nTotalVertices += mesh->mNumVertices;
 
 		for (UINT x = 0; x < mesh->mNumVertices; x++) {
 			aiVector3D vec = mesh->mVertices[x];

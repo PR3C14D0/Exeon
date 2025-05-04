@@ -18,6 +18,12 @@ void Scene::Update() {
 	}
 }
 
+void Scene::Render() {
+	for (GameObject* object : this->m_gameObjects) {
+		object->Render();
+	}
+}
+
 void Scene::AddGameObject(GameObject* object) {
 	this->m_gameObjects.push_back(object);
 }
