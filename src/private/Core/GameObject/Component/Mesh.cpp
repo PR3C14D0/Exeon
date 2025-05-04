@@ -36,7 +36,9 @@ void Mesh::UploadVertices() {
 		ComPtr<ID3D12Resource> VBO;
 		d3d12->CreateBuffer(&object.second[0], object.second.size() * sizeof(Vertex), VBO);
 		VBO->SetName(L"StaticMesh VBO");
-		spdlog::debug("{0}: {1:d} vertices uploaded for mesh {2:d}", this->m_name, object.second.size(), object.first);
+		spdlog::info("{0}: {1:d} vertices uploaded for mesh {2:d}", this->m_name, object.second.size(), object.first);
+
+		this->m_VBOs[object.first] = VBO;
 	}
 
 	spdlog::debug("{0}: Vertex Buffer Object initialized", this->m_name);
@@ -90,6 +92,20 @@ void Mesh::LoadModel(std::string filename) {
 
 			Vertex vert = { {pos[0], pos[1], pos[2]}, {normal[0], normal[1], normal[2]}, {uv[0], uv[1]} };
 			vertices.push_back(vert);
+		}
+
+		if (mesh->HasFaces()) {
+			std::vector<UINT> indices;
+			for (int x = 0; x < mesh->mNumFaces; x++) {
+				const aiFace& face = mesh->mFaces[x];
+				UINT nNumIndices = face.mNumIndices;
+
+				for (int f = 0; f < nNumIndices; f++) {
+					indices.push_back(face.mIndices[f]);
+				}
+
+			}
+			this->m_indices[i] = indices;
 		}
 
 		this->m_vertices[i] = vertices;

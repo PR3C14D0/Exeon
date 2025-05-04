@@ -35,6 +35,7 @@ private:
 	bool m_bMeshLoaded;
 
 	std::map<UINT, std::vector<Vertex>> m_vertices;
+	std::map<UINT, std::vector<UINT>> m_indices;
 	std::map <UINT, ComPtr<ID3D12Resource>> m_textures;
 
 	std::map<UINT, ComPtr<ID3D12Resource>> m_VBOs;
