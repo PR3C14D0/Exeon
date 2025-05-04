@@ -10,12 +10,16 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Exeon PROPERTY WIN32_EXECUTABLE TRUE)
 endif()
 
+if (MSVC)
+	target_compile_options(Exeon PUBLIC $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:MSVC>>:/utf-8>)
+endif()
+
 set("PRIVATE_INCLUDE" "${CMAKE_CURRENT_SOURCE_DIR}/public")
 set("PUBLIC_INCLUDE" "${CMAKE_CURRENT_SOURCE_DIR}/../include")
 set("LIB" "${CMAKE_CURRENT_SOURCE_DIR}/../lib")
 
 target_link_libraries(Exeon "d3d12.lib;dxgi.lib;d3dcompiler.lib")
-target_link_libraries(Exeon "${LIB}/assimp-vc143-mt.lib;${LIB}/DirectXTK12.lib")
+target_link_libraries(Exeon "${LIB}/assimp-vc143-mt.lib;${LIB}/DirectXTK12.lib;${LIB}/spdlogd.lib")
 
 target_include_directories(Exeon PRIVATE "${PRIVATE_INCLUDE}")
 target_include_directories(Exeon PUBLIC "${PUBLIC_INCLUDE}")

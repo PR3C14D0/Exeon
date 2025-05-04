@@ -80,7 +80,7 @@ void Mesh::LoadModel(std::string filename) {
 			const aiTexture* texture = scene->GetEmbeddedTexture(texPath.C_Str());
 			ResourceManager* resMgr = ResourceManager::GetInstance();
 			ComPtr<ID3D12Resource> resource;
-			resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, resource.GetAddressOf());
+			resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, texture->mFilename.C_Str(), resource.GetAddressOf());
 		}
 	}
 }

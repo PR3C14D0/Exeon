@@ -1,5 +1,7 @@
 #include <iostream>
 #include <Windows.h>
+#define FMT_UNICODE 0
+#include <spdlog/spdlog.h>
 #include "Core/Core.h"
 
 bool g_bQuit = false;
@@ -38,17 +40,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	if (hwnd)
 		ShowWindow(hwnd, nShowCmd);
-	std::cout << "[DEBUG] Window created" << std::endl;
+#ifndef NDEBUG
+	spdlog::set_level(spdlog::level::debug);
+#endif
+	spdlog::debug("Window created");
 
 	Core* core = Core::GetInstance();
 	core->SetHWND(hwnd);
 
 	core->Init();
-	std::cout << "[DEBUG] Core initialized" << std::endl;
+	spdlog::debug("Core initialized");
 
 	MSG msg = { };
-
-	std::cout << "[DEBUG] Starting main loop" << std::endl;
+	spdlog::debug("Starting main loop");
 	while (!g_bQuit) {
 		while (PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE)) {
 			TranslateMessage(&msg);

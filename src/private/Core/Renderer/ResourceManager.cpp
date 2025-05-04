@@ -20,7 +20,32 @@ void ResourceManager::Init() {
 
 }
 
-void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, ID3D12Resource** resource) {
+void ResourceManager::GetResource(std::string resource, ComPtr<ID3D12Resource>& res) {
+	if (this->ResourceExists(resource)) {
+		res = this->m_resources[resource];
+	}
+	else {
+		
+	}
+}
+
+bool ResourceManager::ResourceExists(std::string resource) {
+	bool bRet = false;
+	
+	/* 
+		Check if the `m_resources` map size is bigger than 0 (not empty)
+		Then, check if there's a resource with the specified name. 
+	*/
+	if (this->m_resources.size() > 0) {
+		if (this->m_resources.count(resource) > 0) {
+			bRet = true;
+		}
+	}
+
+	return bRet;
+}
+
+void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::string texName, ID3D12Resource** resource) {
 	DirectX::ResourceUploadBatch batch(this->m_dev.Get());
 	batch.Begin(D3D12_COMMAND_LIST_TYPE_DIRECT);
 	ThrowIfFailed(DirectX::CreateWICTextureFromMemory(this->m_dev.Get(), batch, pData, dwDataSize, resource));
