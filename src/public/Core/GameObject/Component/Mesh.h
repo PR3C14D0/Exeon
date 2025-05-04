@@ -38,6 +38,8 @@ private:
 	std::map<UINT, std::vector<UINT>> m_indices;
 	std::map <UINT, ComPtr<ID3D12Resource>> m_textures;
 
+	std::vector<D3D12_VERTEX_BUFFER_VIEW> m_VBVs;
+
 	std::map<UINT, ComPtr<ID3D12Resource>> m_VBOs;
 	std::map<UINT, ComPtr<ID3D12Resource>> m_IBOs;
 

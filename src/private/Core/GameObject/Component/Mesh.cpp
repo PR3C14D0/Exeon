@@ -50,13 +50,23 @@ void Mesh::UploadVertices() {
 		this->m_IBOs[object.first] = IBO;
 	}
 
-	spdlog::debug("{0}: Vertex Buffer Object initialized", this->m_name);
+	spdlog::debug("{0}: Vertex Buffer Objects initialized", this->m_name);
+	spdlog::debug("{0}: Index Buffer Objects initialized", this->m_name);
+
+	for (std::pair<UINT, ComPtr<ID3D12Resource>> VBO : this->m_VBOs) {
+		D3D12_VERTEX_BUFFER_VIEW vbv = { };
+		vbv.BufferLocation = VBO.second->GetGPUVirtualAddress();
+		vbv.SizeInBytes = this->m_vertices[VBO.first].size() * sizeof(Vertex);
+		vbv.StrideInBytes = sizeof(Vertex);
+
+		this->m_VBVs.push_back(vbv);
+	}
 }
 
 void Mesh::Update() {
 	Component::Update();
 
-
+	this->m_list->IASetVertexBuffers(0, this->m_VBVs.size(), &this->m_VBVs[0]);
 }
 
 void Mesh::D3D12Init(D3D12* renderer) {

@@ -22,8 +22,8 @@ void Core::SetHWND(HWND& hwnd) {
 }
 
 void Core::MainLoop() {
-	this->m_renderer->Update();
 	this->m_sceneManager->Update();
+	this->m_renderer->Update();
 }
 
 Core* Core::GetInstance() {
