@@ -41,6 +41,15 @@ void Mesh::UploadVertices() {
 		this->m_VBOs[object.first] = VBO;
 	}
 
+	for (std::pair<UINT, std::vector<UINT>> object : this->m_indices) {
+		ComPtr<ID3D12Resource> IBO;
+		d3d12->CreateBuffer(&object.second[0], object.second.size() * sizeof(UINT), IBO);
+		IBO->SetName(L"StaticMesh IBO");
+		spdlog::info("{0}: {1:d} indices uploaded for mesh {2:d}", this->m_name, object.second.size(), object.first);
+
+		this->m_IBOs[object.first] = IBO;
+	}
+
 	spdlog::debug("{0}: Vertex Buffer Object initialized", this->m_name);
 }
 
