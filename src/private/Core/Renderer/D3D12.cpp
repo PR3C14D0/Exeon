@@ -94,7 +94,7 @@ void D3D12::Init(HWND hwnd) {
 	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_positionBuff);
 
 	this->m_albedoBuff->SetName(L"Albedo");
-	this->m_uvBuff->SetName(L"UV");
+	this->m_uvBuff->SetName(L"Normal");
 	this->m_positionBuff->SetName(L"Position");
 	
 	this->m_nAlbedoIndex = this->m_rtvHeap->GetDescriptorCount();
@@ -202,20 +202,21 @@ void D3D12::Update() {
 	Descriptor albedoDesc = this->m_rtvHeap->GetDescriptor(this->m_nAlbedoIndex);
 	Descriptor UVDesc = this->m_rtvHeap->GetDescriptor(this->m_nUVIndex);
 	Descriptor positionDesc = this->m_rtvHeap->GetDescriptor(this->m_nPositionIndex);
+	Descriptor dsvDesc = this->m_dsvHeap->GetDescriptor(0);
 	this->m_list->ClearRenderTargetView(albedoDesc.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
 	this->m_list->ClearRenderTargetView(UVDesc.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
 	this->m_list->ClearRenderTargetView(positionDesc.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
+	this->m_list->ClearDepthStencilView(dsvDesc.cpuHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0.f, 0, nullptr);
 
 	this->m_list->RSSetViewports(1, &this->m_viewport);
 	this->m_list->RSSetScissorRects(1, &this->m_scissor);
 
-	Descriptor dsv = this->m_dsvHeap->GetDescriptor(0);
 	D3D12_CPU_DESCRIPTOR_HANDLE gbuffers[] = {
 		albedoDesc.cpuHandle,
 		UVDesc.cpuHandle,
 		positionDesc.cpuHandle
 	};
-	this->m_list->OMSetRenderTargets(_countof(gbuffers), gbuffers, FALSE, &dsv.cpuHandle);
+	this->m_list->OMSetRenderTargets(_countof(gbuffers), gbuffers, FALSE, &dsvDesc.cpuHandle);
 
 	this->sceneMgr->Render();
 
