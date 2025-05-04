@@ -23,12 +23,14 @@ struct PixelOutput
 {
     float4 albedo : SV_Target0;
     float4 normal : SV_Target1;
+    float4 position : SV_Target2;
 };
 
 PixelOutput PixelMain(VertexOutput input)
 {
     PixelOutput output;
     output.albedo = tex.Sample(texSampler, float2(input.uv.x, 1 - input.uv.y));
-    output.normal = input.normal;
+    output.normal = input.normal * 0.5f + 0.5f;
+    output.position = input.position;
     return output;
 }
