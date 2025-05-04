@@ -7,6 +7,7 @@
 #include <vector>
 #include "Core/Renderer/DescriptorHeap.h"
 #include "Core/Renderer/Shader.h"
+#include <spdlog/spdlog.h>
 
 using namespace Microsoft::WRL;
 

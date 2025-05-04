@@ -23,13 +23,13 @@ void Shader::D3D12Shader(const char* shader, const char* vertexShader, const cha
 	D3DCompileFromFile(wShader, nullptr, nullptr, pixelShader, "ps_5_1", NULL, NULL, m_pixelBlob.GetAddressOf(), pixelError.GetAddressOf());
 
 	if (vertexError) {
-		std::cout << "[ERROR] " << (char*)vertexError->GetBufferPointer() << std::endl;
+		spdlog::error("{0}", (char*)vertexError->GetBufferPointer());
 		delete this;
 		return;
 	}
 
 	if (pixelError) {
-		std::cout << "[ERROR] " << (char*)pixelError->GetBufferPointer() << std::endl;
+		spdlog::error("{0}", (char*)pixelError->GetBufferPointer());
 		delete this;
 		return;
 	}

@@ -4,6 +4,7 @@
 #include <Windows.h>
 #include <map>
 #include "Core/Scene/Scene.h"
+#include <spdlog/spdlog.h>
 
 class SceneManager {
 private:

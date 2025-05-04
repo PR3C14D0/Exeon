@@ -83,9 +83,9 @@ void D3D12::Init(HWND hwnd) {
 	ThrowIfFailed(this->m_dev->CreateFence(this->m_nCurrentFence, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(this->m_fence.GetAddressOf())));
 	this->m_nCurrentFence++;
 
-	std::cout << "[DEBUG] Initializing Depth buffer" << std::endl;
+	spdlog::debug("Initializing Depth buffer");
 	this->InitDepth();
-	std::cout << "[DEBUG] Depth buffer initialized" << std::endl;
+	spdlog::debug("Depth buffer initialized");
 
 	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_albedoBuff);
 	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_uvBuff);

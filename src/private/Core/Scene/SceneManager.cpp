@@ -20,7 +20,7 @@ void SceneManager::Update() {
 void SceneManager::AddScene(Scene* scene) {
 	if (this->m_scenes.count(scene->name) > 0) {
 		MessageBox(NULL, "Scene with that name already exists", "Error", MB_OK | MB_ICONERROR);
-		std::cout << "[ERROR] Scene with name: " << scene->name << " already exists" << std::endl;
+		spdlog::error("Scene with name {0} already exists", scene->name);
 		return;
 	}
 
@@ -30,7 +30,7 @@ void SceneManager::AddScene(Scene* scene) {
 Scene* SceneManager::GetScene(std::string name) {
 	if (!(this->m_scenes.count(name) > 0)) {
 		MessageBox(NULL, "Scene not found", "Error", MB_OK | MB_ICONERROR);
-		std::cout << "[ERROR] Scene with name: " << name << " Not found" << std::endl;
+		spdlog::error("Scene with name {0} not found", name);
 		return nullptr;
 	}
 
@@ -40,7 +40,7 @@ Scene* SceneManager::GetScene(std::string name) {
 void SceneManager::LoadScene(std::string name) {
 	if (!(this->m_scenes.count(name) > 0)) {
 		MessageBox(NULL, "Scene not found", "Error", MB_OK | MB_ICONERROR);
-		std::cout << "[ERROR] Scene not found" << std::endl;
+		spdlog::error("Scene not found");
 		return;
 	}
 

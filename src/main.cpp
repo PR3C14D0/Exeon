@@ -67,6 +67,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 void DebugConsole() {
 	AllocConsole();
+	SetConsoleTitle("Exeon Debug console");
 	FILE* f;
 	freopen_s(&f, "CONOUT$", "w", stdout);
 }
