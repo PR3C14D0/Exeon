@@ -1,12 +1,19 @@
 #include "Core/Renderer/D3D12.h"
 #include "Core/Renderer/ScreenQuad.h"
 #include "Core/Scene/SceneManager.h"
+#include <chrono>
+
+using Clock = std::chrono::high_resolution_clock;
+using TimePoint = std::chrono::time_point<Clock>;
+
+// Variables globales o del renderer
+TimePoint lastFrameTime = Clock::now();
 
 D3D12::D3D12() : Renderer::Renderer() {
 	this->m_nBackBuffers = 2;
 	this->m_nCurrentFence = 0;
 	this->m_hFence = NULL;
-	this->m_vsyncState = VSYNC::ENABLED;
+	this->m_vsyncState = VSYNC::DISABLED;
 
 	this->m_nAlbedoIndex = 0;
 	this->m_nUVIndex = 0;
@@ -153,6 +160,7 @@ void D3D12::Init(HWND hwnd) {
 	ID3D12CommandList* lists[] = {
 		this->m_list.Get()
 	};
+
 	this->m_queue->ExecuteCommandLists(1, lists);
 	this->WaitFrame();
 }
@@ -278,6 +286,10 @@ void D3D12::Update() {
 	this->m_sc->Present(this->m_vsyncState, 0);
 	this->m_nActualBackBuffer = this->m_sc->GetCurrentBackBufferIndex();
 	this->WaitFrame();
+	TimePoint now = Clock::now();
+	std::chrono::duration<float> delta = now - lastFrameTime;
+	lastFrameTime = now;
+	std::cout << delta.count() << std::endl;
 }
 
 void D3D12::WaitFrame() {
@@ -413,6 +425,7 @@ void D3D12::GetMostCapableAdapter() {
 			IID_PPV_ARGS(tempDevice.GetAddressOf()
 			)))) {
 			this->m_adapter = adapter;
+			break;
 		}
 	}
 
