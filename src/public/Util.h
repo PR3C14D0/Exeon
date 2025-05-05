@@ -1,10 +1,17 @@
 #pragma once
 #include <iostream>
 #include <Windows.h>
+#include <DXMath/DirectXMath.h>
 
 typedef float RGBA[4];
 typedef float RGB[3];
 typedef float RG[2];
+
+struct WVP {
+	XMMATRIX World;
+	XMMATRIX View;
+	XMMATRIX Projection;
+};
 
 struct Vertex {
 	RGB xyz;

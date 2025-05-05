@@ -16,6 +16,9 @@ private:
 	
 	SceneManager* m_sceneManager;
 	ResourceManager* m_resMgr;
+
+	UINT m_nWidth;
+	UINT m_nHeight;
 public:
 	Core();
 	void Init();
@@ -24,6 +27,7 @@ public:
 
 	static Core* GetInstance();
 
+	void GetWindowSize(UINT& nWidth, UINT& nHeight);
 
 	void MainLoop();
 

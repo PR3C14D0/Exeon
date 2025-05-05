@@ -14,6 +14,7 @@
 #include "Core/GameObject/Component/Component.h"
 #include "Core/Renderer/Shader.h"
 #include "Core/Renderer/Descriptor.h"
+#include "Math/Transform.h"
 
 using namespace Microsoft::WRL;
 
@@ -62,8 +63,12 @@ private:
 	void UploadVertices();
 	void InitPipeline();
 	void InitSampler(D3D12* renderer);
+
+	WVP m_wvp;
+
+	Transform m_transform;
 public:
-	Mesh(std::string name);
+	Mesh(std::string name, Transform& parentTransform);
 
 	void Init();
 	void Update();
