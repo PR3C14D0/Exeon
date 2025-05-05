@@ -5,6 +5,7 @@
 
 #include "Core/GameObject/Component/Component.h"
 #include "Core/GameObject/Component/Mesh.h"
+#include "Math/Transform.h"
 
 class GameObject {
 private:
@@ -12,8 +13,8 @@ private:
 
 	std::vector<Component*> m_components;
 	Mesh* m_mesh;
-
 public:
+	Transform transform;
 	GameObject(std::string name);
 
 	void Init();
