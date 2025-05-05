@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <DXMath/DirectXMath.h>
 
+using namespace DirectX;
+
 typedef float RGBA[4];
 typedef float RGB[3];
 typedef float RG[2];

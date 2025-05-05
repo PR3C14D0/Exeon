@@ -125,6 +125,11 @@ void D3D12::Init(HWND hwnd) {
 	this->ResourceBarrier(this->m_uvBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	this->ResourceBarrier(this->m_positionBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
+	/* Track states */
+	m_resourceStates[this->m_albedoBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	m_resourceStates[this->m_uvBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	m_resourceStates[this->m_positionBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
 	// We'll allocate 3 for our ScreenQuad.
 	this->m_cbvSrvHeap = new DescriptorHeap(3, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 
@@ -163,7 +168,7 @@ void D3D12::InitDepth() {
 	depthBuffDesc.Height = this->m_nHeight;
 	depthBuffDesc.MipLevels = 1;
 	depthBuffDesc.DepthOrArraySize = 1;
-	depthBuffDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	depthBuffDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
 	depthBuffDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
 	D3D12_HEAP_PROPERTIES heapProps = { };
@@ -172,7 +177,7 @@ void D3D12::InitDepth() {
 	D3D12_CLEAR_VALUE dsvClear = { };
 	dsvClear.Format = depthBuffDesc.Format;
 	dsvClear.DepthStencil.Depth = 1.f;
-	dsvClear.DepthStencil.Depth = 1.f;
+	dsvClear.DepthStencil.Stencil = 0.f;
 
 	ThrowIfFailed(this->m_dev->CreateCommittedResource(
 		&heapProps,
@@ -203,6 +208,10 @@ void D3D12::Update() {
 	ComPtr<ID3D12Resource> actualBuffer = this->m_backBuffers[this->m_nActualBackBuffer];
 	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
+	if (this->m_resourceStates[this->m_albedoBuff.Get()] != D3D12_RESOURCE_STATE_RENDER_TARGET)
+		this->ResourceBarrier(this->m_albedoBuff, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+
 	Descriptor albedoDesc = this->m_rtvHeap->GetDescriptor(this->m_nAlbedoIndex);
 	Descriptor UVDesc = this->m_rtvHeap->GetDescriptor(this->m_nUVIndex);
 	Descriptor positionDesc = this->m_rtvHeap->GetDescriptor(this->m_nPositionIndex);
@@ -228,7 +237,10 @@ void D3D12::Update() {
 	};
 	this->m_list->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
+
 	this->sceneMgr->Render();
+
+	this->ResourceBarrier(this->m_albedoBuff, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	Descriptor rtv = this->m_rtvHeap->GetDescriptor(this->m_nActualBackBuffer);
 	this->m_list->OMSetRenderTargets(1, &rtv.cpuHandle, FALSE, nullptr);
@@ -300,6 +312,16 @@ void D3D12::InitGBufferShader() {
 }
 
 void D3D12::ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState) {
+	if (oldState == newState)
+		return;
+
+	D3D12_RESOURCE_STATES currentState = m_resourceStates[resource.Get()];
+
+	// Si el estado conocido no es el declarado, usa el conocido
+	if (currentState != oldState && currentState != D3D12_RESOURCE_STATE_COMMON)
+		oldState = currentState;
+
+
 	D3D12_RESOURCE_BARRIER barrier = { };
 	barrier.Transition.pResource = resource.Get();
 	barrier.Transition.StateBefore = oldState;
@@ -308,6 +330,7 @@ void D3D12::ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STAT
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 
 	this->m_list->ResourceBarrier(1, &barrier);
+	this->m_resourceStates[resource.Get()] = newState;
 
 	return;
 }

@@ -39,6 +39,8 @@ private:
 	std::vector<ComPtr<ID3D12Resource>> m_backBuffers;
 	ComPtr<ID3D12Resource> m_depthBuffer;
 
+	std::unordered_map<ID3D12Resource*, D3D12_RESOURCE_STATES> m_resourceStates;
+
 	UINT m_nActualBackBuffer;
 
 	void GetMostCapableAdapter();

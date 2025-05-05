@@ -168,7 +168,8 @@ void Mesh::InitPipeline() {
 	plDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	plDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	plDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	plDesc.RasterizerState.FrontCounterClockwise = TRUE;
 	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RTVFormats[1] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RTVFormats[2] = DXGI_FORMAT_B8G8R8A8_UNORM;

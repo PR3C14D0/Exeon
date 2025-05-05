@@ -47,7 +47,7 @@ bool ResourceManager::ResourceExists(std::string resource) {
 
 void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::string texName, ComPtr<ID3D12Resource>& resource) {
 	if (!this->AddResource(texName, resource)) {
-		spdlog::error("Error adding resource {0} to the resource manager", texName);
+		resource = this->m_resources[texName];
 		return;
 	}
 
