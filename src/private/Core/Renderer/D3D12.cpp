@@ -6,7 +6,7 @@ D3D12::D3D12() : Renderer::Renderer() {
 	this->m_nBackBuffers = 2;
 	this->m_nCurrentFence = 0;
 	this->m_hFence = NULL;
-	this->m_vsyncState = VSYNC::ENABLED;
+	this->m_vsyncState = VSYNC::DISABLED;
 
 	this->m_nAlbedoIndex = 0;
 	this->m_nUVIndex = 0;
@@ -153,6 +153,7 @@ void D3D12::Init(HWND hwnd) {
 	ID3D12CommandList* lists[] = {
 		this->m_list.Get()
 	};
+
 	this->m_queue->ExecuteCommandLists(1, lists);
 	this->WaitFrame();
 }
@@ -413,6 +414,7 @@ void D3D12::GetMostCapableAdapter() {
 			IID_PPV_ARGS(tempDevice.GetAddressOf()
 			)))) {
 			this->m_adapter = adapter;
+			break;
 		}
 	}
 
