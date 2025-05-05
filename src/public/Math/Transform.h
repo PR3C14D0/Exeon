@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include "Vector3.h"
+#include <DXMath/DirectXMath.h>
 
 struct Transform {
 	Vector3 location;
@@ -14,4 +15,6 @@ struct Transform {
 
 	void Rotate(Vector3 v);
 	void Rotate(float x, float y, float z);
+
+	Vector3 RotatePoint(Vector3 point);
 };

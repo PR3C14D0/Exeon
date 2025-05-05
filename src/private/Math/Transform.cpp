@@ -21,3 +21,7 @@ void Transform::Rotate(Vector3 v) {
 void Transform::Rotate(float x, float y, float z) {
 	this->rotation = rotation + Vector3(x, y, z);
 }
+
+Vector3 Transform::RotatePoint(Vector3 point) {
+	return Vector3();
+}
