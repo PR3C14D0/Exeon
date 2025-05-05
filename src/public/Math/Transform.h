@@ -3,6 +3,8 @@
 #include "Vector3.h"
 #include <DXMath/DirectXMath.h>
 
+using namespace DirectX;
+
 struct Transform {
 	Vector3 location;
 	Vector3 rotation;	
@@ -15,6 +17,7 @@ struct Transform {
 
 	void Rotate(Vector3 v);
 	void Rotate(float x, float y, float z);
+	Vector3 Forward();
 
 	Vector3 RotatePoint(Vector3 point);
 };
