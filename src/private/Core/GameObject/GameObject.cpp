@@ -2,7 +2,7 @@
 
 GameObject::GameObject(std::string name) {
 	this->m_name = name;
-	
+	this->m_input = Input::GetInstance();
 }
 
 void GameObject::Init() {
