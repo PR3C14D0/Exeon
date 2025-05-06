@@ -26,6 +26,10 @@ public:
 
 	void Render();
 
+	void SetCurrentCamera(std::string cameraName);
+	Camera* GetCurrentCamera();
+
 	void AddGameObject(GameObject* object);
 	bool ObjectExists(std::string name);
+	bool CameraExists(std::string name);
 };

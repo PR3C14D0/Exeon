@@ -14,7 +14,6 @@ private:
 	std::string m_name;
 
 	std::vector<Component*> m_components;
-	Mesh* m_mesh;
 protected:
 	Input* m_input;
 public:

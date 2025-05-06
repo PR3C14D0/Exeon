@@ -7,9 +7,6 @@ GameObject::GameObject(std::string name) {
 
 void GameObject::Init() {
 	//this->transform.Translate(0.f, 0.f, 0.f);
-	this->m_mesh = new Mesh("StaticMeshComponent", this->transform);
-	this->m_components.push_back(this->m_mesh);
-	this->m_mesh->LoadModel("f16.fbx");
 	for (Component* component : this->m_components) {
 		component->Init();
 	}
