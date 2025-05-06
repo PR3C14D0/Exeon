@@ -5,9 +5,11 @@
 #include "Core/Core.h"
 #include "resource.h"
 #include "Core/Input/Input.h"
+#include "Core/Time.h"
 
 bool g_bQuit = false;
 Input* g_input = Input::GetInstance();
+Time* g_time = Time::GetInstance();
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -64,8 +66,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+		g_time->currentTime = static_cast<float>(clock()) / CLOCKS_PER_SEC;
+		g_time->deltaTime = g_time->currentTime - g_time->lastTime;
 
 		core->MainLoop();
+		g_time->lastTime = g_time->currentTime;
 	}
 
 	return FALSE;
