@@ -7,6 +7,7 @@
 #include "Core/GameObject/Component/Mesh.h"
 #include "Math/Transform.h"
 #include "Core/Input/Input.h"
+#include "Core/Time.h"
 
 class GameObject {
 	friend class Scene;
@@ -16,6 +17,7 @@ private:
 	std::vector<Component*> m_components;
 protected:
 	Input* m_input;
+	Time* m_time;
 public:
 	Transform transform;
 	GameObject(std::string name);
