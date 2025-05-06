@@ -89,6 +89,15 @@ void Mesh::UploadVertices() {
 
 		this->m_VBVs.push_back(vbv);
 	}
+
+	for (std::pair<UINT, ComPtr<ID3D12Resource>> IBO : this->m_IBOs) {
+		D3D12_INDEX_BUFFER_VIEW ibv = { };
+		ibv.BufferLocation = IBO.second->GetGPUVirtualAddress();
+		ibv.SizeInBytes = this->m_indices[IBO.first].size() * sizeof(UINT);
+		ibv.Format = DXGI_FORMAT_R32_UINT;
+
+		this->m_IBVs.push_back(ibv);
+	}
 }
 
 void Mesh::InitConstantBuffer() {
@@ -152,13 +161,15 @@ void Mesh::Render() {
 
 	int i = 0;
 	for (D3D12_VERTEX_BUFFER_VIEW vbv : this->m_VBVs) {
+		D3D12_INDEX_BUFFER_VIEW ibv = this->m_IBVs[i];
 		this->m_list->IASetVertexBuffers(0, 1, &vbv);
+		this->m_list->IASetIndexBuffer(&ibv);
 
 		UINT nTextureIndex = this->m_textureIndices[i];
 		Descriptor texDesc = this->m_cbv_srvHeap->GetDescriptor(nTextureIndex);
 		this->m_list->SetGraphicsRootDescriptorTable(1, texDesc.gpuHandle);
 
-		this->m_list->DrawInstanced(this->m_vertices[i].size(), 1, 0, 0);
+		this->m_list->DrawIndexedInstanced(this->m_indices[i].size(), 1, 0, 0, 0);
 		i++;
 	}
 }

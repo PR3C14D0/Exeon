@@ -46,6 +46,7 @@ private:
 	std::map<UINT, UINT> m_textureIndices;
 
 	std::vector<D3D12_VERTEX_BUFFER_VIEW> m_VBVs;
+	std::vector<D3D12_INDEX_BUFFER_VIEW> m_IBVs;
 
 	std::map<UINT, ComPtr<ID3D12Resource>> m_VBOs;
 	std::map<UINT, ComPtr<ID3D12Resource>> m_IBOs;
