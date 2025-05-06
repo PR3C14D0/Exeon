@@ -39,11 +39,11 @@ void Mesh::Init() {
 	Component::Init();
 	Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
 	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity());
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixTranslation(cameraTransform.location.x, cameraTransform.location.y, cameraTransform.location.z));
-
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(cameraTransform.rotation.x)));
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(cameraTransform.rotation.y)));
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(cameraTransform.rotation.z)));
+	this->m_wvp.View *= XMMatrixTranspose(XMMatrixTranslation(cameraTransform.location.x, cameraTransform.location.y, cameraTransform.location.z));
+
 
 	if (D3D12* d3d12 = dynamic_cast<D3D12*>(this->m_renderer)) {
 		this->D3D12Init(d3d12);
@@ -119,11 +119,11 @@ void Mesh::UpdateConstantBuffer() {
 
 	Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
 	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity());
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixTranslation(cameraTransform.location.x, cameraTransform.location.y, cameraTransform.location.z));
-	
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(cameraTransform.rotation.x)));
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(cameraTransform.rotation.y)));
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(cameraTransform.rotation.z)));
+	this->m_wvp.View *= XMMatrixTranspose(XMMatrixTranslation(cameraTransform.location.x, cameraTransform.location.y, cameraTransform.location.z));
+	
 	
 	//this->m_wvp.Projection = XMMatrixTranspose(XMMatrixPerspectiveLH(XMConvertToRadians(90.f), static_cast<float>(nWidth) / static_cast<float>(nHeight), 0.01f, 3000.f));
 
