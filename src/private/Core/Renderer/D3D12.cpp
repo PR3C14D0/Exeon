@@ -286,22 +286,7 @@ void D3D12::Update() {
 	this->m_list->ResolveSubresource(this->m_backBuffers[this->m_nActualBackBuffer].Get(), 0, sqRes.Get(), 0, DXGI_FORMAT_B8G8R8A8_UNORM);
 
 	this->ResourceBarrier(sqRes, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-	this->ResourceBarrier(this->m_backBuffers[this->m_nActualBackBuffer], D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	this->m_list->OMSetRenderTargets(1, &rtv.cpuHandle, FALSE, nullptr);
-
-	ImGui_ImplWin32_NewFrame();
-	ImGui_ImplDX12_NewFrame();
-	ImGui::NewFrame();
-
-	ImGui::SetNextWindowSize(ImVec2{ 200, 300 });
-	ImGui::Begin("Test");
-	ImGui::End();
-
-	ImGui::Render();
-	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), this->m_list.Get());
-
-	this->ResourceBarrier(this->m_backBuffers[this->m_nActualBackBuffer], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	this->ResourceBarrier(this->m_backBuffers[this->m_nActualBackBuffer], D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PRESENT);
 
 	ThrowIfFailed(this->m_list->Close());
 
