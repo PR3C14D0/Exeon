@@ -122,17 +122,24 @@ void Mesh::InitConstantBuffer() {
 void Mesh::UpdateConstantBuffer() {
 	UINT nWVPSize = (sizeof(this->m_wvp) + 255) & ~255;
 	this->m_wvp.World = XMMatrixTranspose(XMMatrixIdentity());
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixScaling(.01f, .01f, .01f));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->m_transform.rotation.x)));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform.rotation.y)));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform.rotation.z)));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixTranslation(this->m_transform.location.x, this->m_transform.location.y, this->m_transform.location.z));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixTranslation(
+		this->m_transform.location.x, 
+		this->m_transform.location.y,
+		this->m_transform.location.z));
 
 	Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
 	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity());
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(cameraTransform.rotation.x)));
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(cameraTransform.rotation.y)));
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(cameraTransform.rotation.z)));
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixTranslation(cameraTransform.location.x, cameraTransform.location.y, cameraTransform.location.z));
+	this->m_wvp.View *= XMMatrixTranspose(XMMatrixTranslation(
+		-cameraTransform.location.x, 
+		-cameraTransform.location.y, 
+		-cameraTransform.location.z));
 	
 	
 	PVOID pData;
