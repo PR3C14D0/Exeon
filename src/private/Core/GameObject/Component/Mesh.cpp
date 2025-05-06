@@ -122,7 +122,7 @@ void Mesh::InitConstantBuffer() {
 void Mesh::UpdateConstantBuffer() {
 	UINT nWVPSize = (sizeof(this->m_wvp) + 255) & ~255;
 	this->m_wvp.World = XMMatrixTranspose(XMMatrixIdentity());
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixScaling(.01f, .01f, .01f));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixScaling(0.1f, 0.1f, 0.1f));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->m_transform.rotation.x)));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform.rotation.y)));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform.rotation.z)));

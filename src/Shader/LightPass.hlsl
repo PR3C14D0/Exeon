@@ -22,6 +22,19 @@ struct PixelOutput
 PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {
     PixelOutput output;
-    output.screen = albedo.Load(input.position.xy, index);
+    float4 albedoColor = albedo.Load(input.position.xy, index);
+    float4 nml = normalize(normal.Load(input.position.xy, index) * 2 - 1);
+    float4 vertexPos = position.Load(input.position.xy, index);
+    
+    float4 ambientColor = float4(0.1f, 0.1f, 0.1f, 1.f);
+    float4 lightPos = float4(0.f, 200.f, 200.f, 1.f);
+    float4 lightColor = float4(1.f, 1.f, 1.f, 1.f);
+    
+    float3 lightDir = normalize(lightPos.xyz - vertexPos.xyz);
+    float LdotN = saturate(dot(lightDir, nml.xyz));
+    
+    float4 outputColor = saturate(saturate(LdotN + ambientColor) * lightColor) * albedoColor;
+    
+    output.screen = outputColor;
     return output;
 }

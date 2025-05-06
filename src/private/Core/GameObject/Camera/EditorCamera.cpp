@@ -1,10 +1,10 @@
 #include "Core/GameObject/Camera/EditorCamera.h"
 
 EditorCamera::EditorCamera(std::string name) : Camera(name) {
-	this->m_fSensX = 15.f;
+	this->m_fSensX = 10.f;
 	this->m_fSensY = 10.f;
 
-	this->m_fSpeed = 5.f;
+	this->m_fSpeed = 50.f;
 }
 
 void EditorCamera::Init() {
