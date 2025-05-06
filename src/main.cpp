@@ -4,8 +4,10 @@
 #include <spdlog/spdlog.h>
 #include "Core/Core.h"
 #include "resource.h"
+#include "Core/Input/Input.h"
 
 bool g_bQuit = false;
+Input* g_input = Input::GetInstance();
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -47,6 +49,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif
 	spdlog::debug("Window created");
 
+	g_input->SetHWND(hwnd);
 	Core* core = Core::GetInstance();
 	core->SetHWND(hwnd);
 
@@ -75,12 +78,16 @@ void DebugConsole() {
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	g_input->Callback(hwnd, uMsg, wParam, lParam);
+
 	switch (uMsg) {
 	case WM_DESTROY:
 		g_bQuit = true;
 		PostQuitMessage(0);
 		return 0;
 	}
+	g_input->Close();
+
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
