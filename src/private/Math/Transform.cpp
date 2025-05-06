@@ -27,6 +27,11 @@ Vector3 Transform::Forward() {
 	return this->RotatePoint(v);
 }
 
+Vector3 Transform::Right() {
+	Vector3 v = Vector3(-1.f, 0.f, 0.f);
+	return this->RotatePoint(v);
+}
+
 Vector3 Transform::RotatePoint(Vector3 point) {
 	XMMATRIX rot = XMMatrixTranspose(XMMatrixIdentity());
 	rot *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->rotation.x)));
