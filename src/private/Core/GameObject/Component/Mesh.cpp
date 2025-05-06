@@ -32,7 +32,7 @@ Mesh::Mesh(std::string name, Transform& parentTransform) : Component::Component(
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform.rotation.z)));
 
 	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity());
-	this->m_wvp.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(XMConvertToRadians(90.f), static_cast<float>(nWidth) / static_cast<float>(nHeight), 0.01f, 3000.f));
+	this->m_wvp.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovRH(XMConvertToRadians(70.f), static_cast<float>(nWidth) / static_cast<float>(nHeight), 0.01f, 3000.f));
 }
 
 void Mesh::Init() {
@@ -137,9 +137,9 @@ void Mesh::UpdateConstantBuffer() {
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(cameraTransform.rotation.y)));
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(cameraTransform.rotation.z)));
 	this->m_wvp.View *= XMMatrixTranspose(XMMatrixTranslation(
-		-cameraTransform.location.x, 
-		-cameraTransform.location.y, 
-		-cameraTransform.location.z));
+		cameraTransform.location.x, 
+		cameraTransform.location.y, 
+		cameraTransform.location.z));
 	
 	
 	PVOID pData;
@@ -250,7 +250,7 @@ void Mesh::InitPipeline() {
 	plDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	plDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-	plDesc.RasterizerState.FrontCounterClockwise = FALSE;
+	plDesc.RasterizerState.FrontCounterClockwise = TRUE;
 	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RTVFormats[1] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RTVFormats[2] = DXGI_FORMAT_B8G8R8A8_UNORM;

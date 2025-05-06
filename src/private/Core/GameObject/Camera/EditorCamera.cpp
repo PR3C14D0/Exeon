@@ -1,10 +1,10 @@
 #include "Core/GameObject/Camera/EditorCamera.h"
 
 EditorCamera::EditorCamera(std::string name) : Camera(name) {
-	this->m_fSensX = 10.f;
-	this->m_fSensY = 10.f;
+	this->m_fSensX = 5.f;
+	this->m_fSensY = 5.f;
 
-	this->m_fSpeed = 50.f;
+	this->m_fSpeed = 15.f;
 }
 
 void EditorCamera::Init() {
@@ -17,7 +17,7 @@ void EditorCamera::Update() {
 	if(this->m_input->GetButtonDown(MOUSE_BUTTON::RIGHT)) {
 		this->m_input->ShowCursor(false);
 		
-		this->transform.Rotate(this->m_input->deltaY * this->m_fSensY * this->m_time->deltaTime, this->m_input->deltaX * this->m_fSensX * this->m_time->deltaTime, 0.f);
+		this->transform.Rotate(this->m_input->deltaY * -1 * this->m_fSensY * this->m_time->deltaTime, this->m_input->deltaX * -1 * this->m_fSensX * this->m_time->deltaTime, 0.f);
 
 		if (this->m_input->GetKeyDown('w')) {
 			this->transform.Translate(this->transform.Forward() * this->m_fSpeed * this->m_time->deltaTime);
