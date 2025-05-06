@@ -11,7 +11,7 @@ void Scene::Init() {
 	m_mesh->LoadModel("f16.fbx");
 	this->AddGameObject(m_go);
 
-	this->m_editorCamera = new Camera("EditorCamera");
+	this->m_editorCamera = new EditorCamera("EditorCamera");
 	this->AddGameObject(this->m_editorCamera);
 
 	this->SetCurrentCamera("EditorCamera");

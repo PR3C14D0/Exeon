@@ -6,6 +6,7 @@
 
 #include "Core/GameObject/GameObject.h"
 #include "Core/GameObject/Camera/Camera.h"
+#include "Core/GameObject/Camera/EditorCamera.h"
 
 class Scene {
 private:
@@ -15,7 +16,7 @@ private:
 	std::map<std::string, Camera*> m_cameras;
 	Camera* m_currentCamera;
 
-	Camera* m_editorCamera;
+	EditorCamera* m_editorCamera;
 public:
 	std::string name;
 
