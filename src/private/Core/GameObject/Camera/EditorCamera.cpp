@@ -1,7 +1,10 @@
 #include "Core/GameObject/Camera/EditorCamera.h"
 
 EditorCamera::EditorCamera(std::string name) : Camera(name) {
+	this->m_fSensX = 15.f;
+	this->m_fSensY = 10.f;
 
+	this->m_fSpeed = 5.f;
 }
 
 void EditorCamera::Init() {
@@ -14,22 +17,22 @@ void EditorCamera::Update() {
 	if(this->m_input->GetButtonDown(MOUSE_BUTTON::RIGHT)) {
 		this->m_input->ShowCursor(false);
 		
-		this->transform.Rotate(this->m_input->deltaY, this->m_input->deltaX, 0.f);
+		this->transform.Rotate(this->m_input->deltaY * this->m_fSensY * this->m_time->deltaTime, this->m_input->deltaX * this->m_fSensX * this->m_time->deltaTime, 0.f);
 
 		if (this->m_input->GetKeyDown('w')) {
-			this->transform.Translate(this->transform.Forward() * 0.1f);
+			this->transform.Translate(this->transform.Forward() * this->m_fSpeed * this->m_time->deltaTime);
 		}
 
 		if (this->m_input->GetKeyDown('s')) {
-			this->transform.Translate(this->transform.Forward() * -0.1f);
+			this->transform.Translate(this->transform.Forward() * this->m_fSpeed * -1 * this->m_time->deltaTime);
 		}
 
 		if (this->m_input->GetKeyDown('d')) {
-			this->transform.Translate(this->transform.Right() * 0.1f);
+			this->transform.Translate(this->transform.Right() * this->m_fSpeed * this->m_time->deltaTime);
 		}
 
 		if (this->m_input->GetKeyDown('a')) {
-			this->transform.Translate(this->transform.Right() * -0.1f);
+			this->transform.Translate(this->transform.Right() * this->m_fSpeed * -1 * this->m_time->deltaTime);
 		}
 	}
 	else {
