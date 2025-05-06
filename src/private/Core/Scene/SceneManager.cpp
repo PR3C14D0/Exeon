@@ -37,6 +37,10 @@ Scene* SceneManager::GetScene(std::string name) {
 	return this->m_scenes[name];
 }
 
+Scene* SceneManager::GetCurrentScene() {
+	return this->m_actualScene;
+}
+
 void SceneManager::LoadScene(std::string name) {
 	if (!(this->m_scenes.count(name) > 0)) {
 		MessageBox(NULL, "Scene not found", "Error", MB_OK | MB_ICONERROR);

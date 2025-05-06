@@ -23,6 +23,7 @@ class Core;
 class Renderer;
 class D3D12;
 class DescriptorHeap;
+class SceneManager;
 
 class Mesh : public Component {
 private:
@@ -71,6 +72,7 @@ private:
 	void InitSampler(D3D12* renderer);
 
 	Transform m_transform;
+	SceneManager* m_sceneMgr;
 public:
 	Mesh(std::string name, Transform& parentTransform);
 

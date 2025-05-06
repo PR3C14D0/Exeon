@@ -22,6 +22,7 @@ public:
 	void Update();
 
 	Scene* GetScene(std::string name);
+	Scene* GetCurrentScene();
 	void AddScene(Scene* scene);
 
 	void Render();
