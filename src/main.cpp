@@ -49,7 +49,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif
 	spdlog::debug("Window created");
 
-	g_input->SetHWND(hwnd);
 	Core* core = Core::GetInstance();
 	core->SetHWND(hwnd);
 
