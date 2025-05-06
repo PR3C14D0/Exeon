@@ -148,6 +148,7 @@ void D3D12::Init(HWND hwnd) {
 	this->m_scissor.right = this->m_nWidth;
 	this->m_scissor.bottom = this->m_nHeight;
 
+
 	ThrowIfFailed(this->m_list->Close());
 
 	ID3D12CommandList* lists[] = {
@@ -156,6 +157,16 @@ void D3D12::Init(HWND hwnd) {
 
 	this->m_queue->ExecuteCommandLists(1, lists);
 	this->WaitFrame();
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	this->m_imGuiHeap = new DescriptorHeap(1, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
+	Descriptor imGuiDesc = this->m_imGuiHeap->GetDescriptor(0);
+
+	ImGui_ImplWin32_Init(this->m_hwnd);
+	ImGui_ImplDX12_Init(this->m_dev.Get(), 1, DXGI_FORMAT_B8G8R8A8_UNORM, this->m_imGuiHeap->m_heap.Get(), imGuiDesc.cpuHandle, imGuiDesc.gpuHandle);
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
 }
 
 void D3D12::InitDepth() {
@@ -257,16 +268,43 @@ void D3D12::Update() {
 	/* We only call this method once per frame. */
 	this->m_screenQuad->Render();
 
+	ID3D12DescriptorHeap* imGuiDescriptorHeaps[] = {
+		this->m_imGuiHeap->m_heap.Get()
+	};
+	this->m_list->SetDescriptorHeaps(_countof(imGuiDescriptorHeaps), imGuiDescriptorHeaps);
+
 	ComPtr<ID3D12Resource> sqRes = nullptr;
 	this->m_screenQuad->GetResource(sqRes);
 
 	this->ResourceBarrier(sqRes, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RESOLVE_SOURCE);
-	this->ResourceBarrier(this->m_backBuffers[this->m_nActualBackBuffer], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_DEST);
+	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RESOLVE_DEST);
 
 	this->m_list->ResolveSubresource(this->m_backBuffers[this->m_nActualBackBuffer].Get(), 0, sqRes.Get(), 0, DXGI_FORMAT_B8G8R8A8_UNORM);
 
 	this->ResourceBarrier(sqRes, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	this->ResourceBarrier(this->m_backBuffers[this->m_nActualBackBuffer], D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_PRESENT);
+
+	this->ResourceBarrier(this->m_backBuffers[this->m_nActualBackBuffer], D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	this->m_list->OMSetRenderTargets(1, &rtv.cpuHandle, FALSE, nullptr);
+
+	ImGui_ImplWin32_NewFrame();
+	ImGuiViewport* imVp = ImGui::GetMainViewport();
+
+	RECT rect;
+	GetClientRect(this->m_hwnd, &rect);
+
+	imVp->Size.x = rect.right - rect.left;;
+	imVp->Size.y = rect.bottom - rect.top;
+	ImGui_ImplDX12_NewFrame();
+	ImGui::NewFrame();
+
+	ImGui::SetNextWindowSize(ImVec2{ 200, 300 });
+	ImGui::Begin("Test");
+	ImGui::End();
+
+	ImGui::Render();
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), this->m_list.Get());
+
+	this->ResourceBarrier(this->m_backBuffers[this->m_nActualBackBuffer], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
 	ThrowIfFailed(this->m_list->Close());
 

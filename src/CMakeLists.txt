@@ -23,8 +23,16 @@ set("PRIVATE_INCLUDE" "${CMAKE_CURRENT_SOURCE_DIR}/public")
 set("PUBLIC_INCLUDE" "${CMAKE_CURRENT_SOURCE_DIR}/../include")
 set("LIB" "${CMAKE_CURRENT_SOURCE_DIR}/../lib")
 
+file(GLOB "IMGUI_SRC" 
+	"${PUBLIC_INCLUDE}/imgui/*.cpp"
+	"${PUBLIC_INCLUDE}/imgui/*.h"
+)
+
+add_library("ImGUI" STATIC ${IMGUI_SRC})
+
 target_link_libraries(Exeon "d3d12.lib;dxgi.lib;d3dcompiler.lib")
 target_link_libraries(Exeon "${LIB}/assimp-vc143-mt.lib;${LIB}/DirectXTK12.lib;${LIB}/spdlogd.lib")
+target_link_libraries(Exeon ImGUI)
 
 target_include_directories(Exeon PRIVATE "${PRIVATE_INCLUDE}")
 target_include_directories(Exeon PUBLIC "${PUBLIC_INCLUDE}")

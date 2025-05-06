@@ -8,6 +8,9 @@
 #include "Core/Renderer/DescriptorHeap.h"
 #include "Core/Renderer/Shader.h"
 #include <spdlog/spdlog.h>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_dx12.h>
+#include <imgui/imgui_impl_win32.h>
 
 using namespace Microsoft::WRL;
 
@@ -56,6 +59,7 @@ private:
 	DescriptorHeap* m_dsvHeap;
 	DescriptorHeap* m_cbvSrvHeap;
 	DescriptorHeap* m_samplerHeap;
+	DescriptorHeap* m_imGuiHeap;
 
 	ComPtr<ID3D12Resource> m_albedoBuff;
 	ComPtr<ID3D12Resource> m_uvBuff;
