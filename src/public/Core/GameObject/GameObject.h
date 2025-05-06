@@ -9,6 +9,7 @@
 #include "Core/Input/Input.h"
 
 class GameObject {
+	friend class Scene;
 private:
 	std::string m_name;
 
