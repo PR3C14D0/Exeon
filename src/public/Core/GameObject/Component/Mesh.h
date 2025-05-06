@@ -60,11 +60,15 @@ private:
 
 	UINT m_nTotalVertices;
 
+	ComPtr<ID3D12Resource> m_wvpRes;
+	WVP m_wvp;
+	UINT m_nWvpIndex;
+	void InitConstantBuffer();
+	void UpdateConstantBuffer();
+
 	void UploadVertices();
 	void InitPipeline();
 	void InitSampler(D3D12* renderer);
-
-	WVP m_wvp;
 
 	Transform m_transform;
 public:

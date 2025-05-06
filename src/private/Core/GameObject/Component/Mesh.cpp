@@ -14,6 +14,7 @@ Mesh::Mesh(std::string name, Transform& parentTransform) : Component::Component(
 	this->m_bMeshLoaded = false;
 	this->m_nTotalVertices = 0;
 	this->m_nSamplerIndex = -1; // I put -1 cuz 0 can actually be occupied.
+	this->m_nWvpIndex = -1;
 	this->m_nTotalVertices = 0;
 	this->m_shader = nullptr;
 
@@ -27,8 +28,8 @@ Mesh::Mesh(std::string name, Transform& parentTransform) : Component::Component(
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform.rotation.y)));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform.rotation.z)));
 
-	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity());
-	this->m_wvp.Projection = XMMatrixTranspose(XMMatrixPerspectiveLH(XMConvertToRadians(90.f), static_cast<float>(nWidth) / static_cast<float>(nHeight), 0.01f, 3000.f));
+	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity() * XMMatrixTranslation(0.f, 0.f, 2.f));
+	this->m_wvp.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(XMConvertToRadians(90.f), static_cast<float>(nWidth) / static_cast<float>(nHeight), 0.01f, 3000.f));
 }
 
 void Mesh::Init() {
@@ -80,17 +81,58 @@ void Mesh::UploadVertices() {
 	}
 }
 
+void Mesh::InitConstantBuffer() {
+	D3D12* d3d12 = dynamic_cast<D3D12*>(this->m_renderer);
+
+	UINT nWVPSize = (sizeof(this->m_wvp) + 255) & ~255;
+
+	d3d12->CreateBuffer(&this->m_wvp, nWVPSize, this->m_wvpRes);
+	this->m_wvpRes->SetName(L"Mesh WVP Constant buffer");
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = { };
+	cbvDesc.BufferLocation = this->m_wvpRes->GetGPUVirtualAddress();
+	cbvDesc.SizeInBytes = nWVPSize;
+
+	this->m_cbv_srvHeap->Allocate(1);
+	this->m_nWvpIndex = this->m_cbv_srvHeap->GetLastDescriptorIndex();
+	Descriptor wvpDesc = this->m_cbv_srvHeap->GetDescriptor(this->m_nWvpIndex);
+
+	this->m_dev->CreateConstantBufferView(&cbvDesc, wvpDesc.cpuHandle);
+}
+
+void Mesh::UpdateConstantBuffer() {
+	UINT nWVPSize = (sizeof(this->m_wvp) + 255) & ~255;
+	this->m_wvp.World = XMMatrixTranspose(XMMatrixIdentity() * XMMatrixTranslation(this->m_transform.location.x, this->m_transform.location.y, this->m_transform.location.z));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->m_transform.rotation.x)));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform.rotation.y)));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform.rotation.z)));
+
+	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity() * XMMatrixTranslation(0.f, 0.f, 2.f));
+	//this->m_wvp.Projection = XMMatrixTranspose(XMMatrixPerspectiveLH(XMConvertToRadians(90.f), static_cast<float>(nWidth) / static_cast<float>(nHeight), 0.01f, 3000.f));
+
+	PVOID pData;
+	ThrowIfFailed(this->m_wvpRes->Map(0, nullptr, &pData));
+	memcpy(pData, &this->m_wvp, nWVPSize);
+	this->m_wvpRes->Unmap(0, nullptr);
+
+	return;
+}
+
 void Mesh::Update() {
 	Component::Update();
 
 }
 
 void Mesh::Render() {
+	this->UpdateConstantBuffer();
 	this->m_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	this->m_list->SetPipelineState(this->m_plState.Get());
 	this->m_list->SetGraphicsRootSignature(this->m_rootSig.Get());
 
+	Descriptor wvpDesc = this->m_cbv_srvHeap->GetDescriptor(this->m_nWvpIndex);
+
 	this->m_list->SetGraphicsRootDescriptorTable(0, this->m_samplerDescriptor.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(2, wvpDesc.gpuHandle);
 
 	int i = 0;
 	for (D3D12_VERTEX_BUFFER_VIEW vbv : this->m_VBVs) {
@@ -114,17 +156,22 @@ void Mesh::InitPipeline() {
 
 	CD3DX12_DESCRIPTOR_RANGE albedoRange;
 	CD3DX12_DESCRIPTOR_RANGE samplerRange;
+	CD3DX12_DESCRIPTOR_RANGE wvpRange;
 	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	samplerRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+	wvpRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 
 	CD3DX12_ROOT_PARAMETER albedoParam;
 	CD3DX12_ROOT_PARAMETER samplerParam;
+	CD3DX12_ROOT_PARAMETER wvpParam;
 	albedoParam.InitAsDescriptorTable(1, &albedoRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	samplerParam.InitAsDescriptorTable(1, &samplerRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	
+	wvpParam.InitAsDescriptorTable(1, &wvpRange, D3D12_SHADER_VISIBILITY_VERTEX);
+
 	D3D12_ROOT_PARAMETER rootParams[] = {
 		samplerParam,
-		albedoParam
+		albedoParam,
+		wvpParam
 	};
 
 	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
@@ -169,7 +216,7 @@ void Mesh::InitPipeline() {
 	plDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	plDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-	plDesc.RasterizerState.FrontCounterClockwise = TRUE;
+	plDesc.RasterizerState.FrontCounterClockwise = FALSE;
 	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RTVFormats[1] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RTVFormats[2] = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -194,6 +241,7 @@ void Mesh::D3D12Init(D3D12* renderer) {
 	this->UploadVertices();
 	this->InitPipeline();
 	this->InitSampler(renderer);
+	this->InitConstantBuffer();
 }
 
 void Mesh::InitSampler(D3D12* renderer) {

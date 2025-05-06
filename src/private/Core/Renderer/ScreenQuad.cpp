@@ -125,39 +125,29 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL}
 	};
 
+	D3D12_INPUT_LAYOUT_DESC layout = { };
+	layout.pInputElementDescs = elements;
+	layout.NumElements = _countof(elements);
+
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC plDesc = { };
+	plDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	plDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	plDesc.DepthStencilState.DepthEnable = TRUE;
+	plDesc.DepthStencilState.StencilEnable = FALSE;
+	plDesc.InputLayout = layout;
 	plDesc.VS.pShaderBytecode = vShader;
 	plDesc.VS.BytecodeLength = nVertexLength;
 	plDesc.PS.pShaderBytecode = pShader;
 	plDesc.PS.BytecodeLength = nPixelLength;
 	plDesc.pRootSignature = this->m_rootSig.Get();
-	plDesc.DepthStencilState.DepthEnable = FALSE;
-	plDesc.DepthStencilState.StencilEnable = FALSE;
-	plDesc.InputLayout.NumElements = _countof(elements);
-	plDesc.InputLayout.pInputElementDescs = elements;
-	plDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	plDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	plDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
+	plDesc.NumRenderTargets = 1;
 	plDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	plDesc.NodeMask = 0;
 	plDesc.SampleDesc.Count = 8;
 	plDesc.SampleMask = UINT32_MAX;
-	plDesc.NumRenderTargets = 1;
-	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
-	plDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-	plDesc.RasterizerState.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-	plDesc.RasterizerState.FrontCounterClockwise = FALSE;
-	plDesc.RasterizerState.DepthClipEnable = TRUE;
-	
-	const D3D12_RENDER_TARGET_BLEND_DESC rtbDesc = {
-		FALSE, FALSE,
-		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-		D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD,
-		D3D12_LOGIC_OP_NOOP,
-		D3D12_COLOR_WRITE_ENABLE_ALL,
-	};
-
-	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
-		plDesc.BlendState.RenderTarget[i] = rtbDesc;
 
 	ThrowIfFailed(this->m_dev->CreateGraphicsPipelineState(&plDesc, IID_PPV_ARGS(this->m_plState.GetAddressOf())));
 }
