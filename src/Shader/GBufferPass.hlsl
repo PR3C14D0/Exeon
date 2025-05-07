@@ -15,6 +15,7 @@ struct VertexOutput
 
 SamplerState texSampler : register(s0);
 Texture2D tex : register(t0);
+Texture2D metalRough : register(t1);
 
 VertexOutput VertexMain(float4 position : POSITION, float4 normal : NORMAL, float2 uv : TEXCOORD)
 {
@@ -35,14 +36,25 @@ struct PixelOutput
 {
     float4 albedo : SV_Target0;
     float4 normal : SV_Target1;
-    float4 position : SV_Target2;
+    float4 material : SV_Target2;
+    float4 position : SV_Target3;
 };
 
 PixelOutput PixelMain(VertexOutput input)
 {
+    float2 uvFlipped = float2(input.uv.x, 1.0f - input.uv.y);
+    
     PixelOutput output;
-    output.albedo = tex.Sample(texSampler, float2(input.uv.x, 1 - input.uv.y));
+    output.albedo = tex.Sample(texSampler, uvFlipped);
     output.normal = input.normal * 0.5f + 0.5f;
+    
+    float4 sampledOrm = metalRough.Sample(texSampler, uvFlipped);
+    
+    float occlusion = sampledOrm.r;
+    float roughness = sampledOrm.g;
+    float metallic = sampledOrm.b;
+    
+    output.material = float4(0.0f, roughness, metallic, 1.0f);
     output.position = input.vertexPos;
     return output;
 }

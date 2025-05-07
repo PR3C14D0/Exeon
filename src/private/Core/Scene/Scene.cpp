@@ -8,7 +8,7 @@ Scene::Scene(std::string name) {
 void Scene::Init() {
 	Mesh* m_mesh = new Mesh("StaticMeshComponent", m_go->transform);
 	m_go->m_components.push_back(m_mesh);
-	m_mesh->LoadModel("Ch44.fbx");
+	m_mesh->LoadModel("barrel.glb");
 	this->AddGameObject(m_go);
 
 	this->m_editorCamera = new EditorCamera("EditorCamera");
