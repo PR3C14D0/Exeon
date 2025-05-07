@@ -97,14 +97,17 @@ void D3D12::Init(HWND hwnd) {
 	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_albedoBuff);
 	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_uvBuff);
 	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_positionBuff);
+	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_materialBuff);
 
 	this->m_albedoBuff->SetName(L"Albedo");
 	this->m_uvBuff->SetName(L"Normal");
 	this->m_positionBuff->SetName(L"Position");
+	this->m_materialBuff->SetName(L"Material Properties");
 	
 	this->m_nAlbedoIndex = this->m_rtvHeap->GetDescriptorCount();
 	this->m_nUVIndex = this->m_nAlbedoIndex + 1;
 	this->m_nPositionIndex = this->m_nUVIndex + 1;
+	this->m_nMaterialBuffIndex = this->m_nPositionIndex + 1;
 
 	D3D12_RENDER_TARGET_VIEW_DESC GBufferDesc = { };
 	GBufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -112,27 +115,30 @@ void D3D12::Init(HWND hwnd) {
 	GBufferDesc.Texture2D.PlaneSlice = 1;
 	GBufferDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
 
-	this->m_rtvHeap->Allocate(3);
+	this->m_rtvHeap->Allocate(4);
 
 	Descriptor albedoDesc = this->m_rtvHeap->GetDescriptor(this->m_nAlbedoIndex);
 	Descriptor UVDesc = this->m_rtvHeap->GetDescriptor(this->m_nUVIndex);
 	Descriptor positionDesc =  this->m_rtvHeap->GetDescriptor(this->m_nPositionIndex);
+	Descriptor materialDesc = this->m_rtvHeap->GetDescriptor(this->m_nMaterialBuffIndex);
 
 	this->m_dev->CreateRenderTargetView(this->m_albedoBuff.Get(), &GBufferDesc, albedoDesc.cpuHandle);
 	this->m_dev->CreateRenderTargetView(this->m_uvBuff.Get(), &GBufferDesc, UVDesc.cpuHandle);
 	this->m_dev->CreateRenderTargetView(this->m_positionBuff.Get(), &GBufferDesc, positionDesc.cpuHandle);
+	this->m_dev->CreateRenderTargetView(this->m_materialBuff.Get(), &GBufferDesc, materialDesc.cpuHandle);
 
 	this->ResourceBarrier(this->m_albedoBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	this->ResourceBarrier(this->m_uvBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	this->ResourceBarrier(this->m_positionBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	this->ResourceBarrier(this->m_materialBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	/* Track states */
 	m_resourceStates[this->m_albedoBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	m_resourceStates[this->m_uvBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	m_resourceStates[this->m_positionBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
-	// We'll allocate 3 for our ScreenQuad.
-	this->m_cbvSrvHeap = new DescriptorHeap(3, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
+	// We'll allocate the initial value for our ScreenQuad.
+	this->m_cbvSrvHeap = new DescriptorHeap(4, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 
 	this->m_screenQuad = new ScreenQuad();
 	this->m_screenQuad->Init();

@@ -65,10 +65,12 @@ private:
 	ComPtr<ID3D12Resource> m_albedoBuff;
 	ComPtr<ID3D12Resource> m_uvBuff;
 	ComPtr<ID3D12Resource> m_positionBuff;
+	ComPtr<ID3D12Resource> m_materialBuff;
 
 	UINT m_nAlbedoIndex;
 	UINT m_nUVIndex;
 	UINT m_nPositionIndex;
+	UINT m_nMaterialBuffIndex;
 
 	UINT m_nBackBuffers;
 

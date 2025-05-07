@@ -80,22 +80,27 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	CD3DX12_DESCRIPTOR_RANGE albedoRange;
 	CD3DX12_DESCRIPTOR_RANGE normalRange;
 	CD3DX12_DESCRIPTOR_RANGE positionRange;
+	CD3DX12_DESCRIPTOR_RANGE materialRange;
 
 	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	normalRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 	positionRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+	materialRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
 
 	CD3DX12_ROOT_PARAMETER albedoParam;
 	CD3DX12_ROOT_PARAMETER normalParam;
 	CD3DX12_ROOT_PARAMETER positionParam;
+	CD3DX12_ROOT_PARAMETER materialParam;
 	albedoParam.InitAsDescriptorTable(1, &albedoRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	normalParam.InitAsDescriptorTable(1, &normalRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	positionParam.InitAsDescriptorTable(1, &positionRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	materialParam.InitAsDescriptorTable(1, &materialRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	
 	D3D12_ROOT_PARAMETER rootParams[] = {
 		albedoParam,
 		normalParam,
-		positionParam
+		positionParam,
+		materialParam
 	};
 
 	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
@@ -162,6 +167,7 @@ void ScreenQuad::D3D12Render(D3D12* renderer) {
 	Descriptor albedoDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
 	Descriptor normalDesc = renderer->m_cbvSrvHeap->GetDescriptor(1);
 	Descriptor positionDesc = renderer->m_cbvSrvHeap->GetDescriptor(2);
+	Descriptor materialDesc = renderer->m_cbvSrvHeap->GetDescriptor(3);
 	this->m_list->OMSetRenderTargets(1, &this->m_rtvDescriptor.cpuHandle, FALSE, nullptr);
 	this->m_list->SetPipelineState(this->m_plState.Get());
 	this->m_list->ClearRenderTargetView(this->m_rtvDescriptor.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
@@ -174,6 +180,7 @@ void ScreenQuad::D3D12Render(D3D12* renderer) {
 	this->m_list->SetGraphicsRootDescriptorTable(0, albedoDesc.gpuHandle);
 	this->m_list->SetGraphicsRootDescriptorTable(1, normalDesc.gpuHandle);
 	this->m_list->SetGraphicsRootDescriptorTable(2, positionDesc.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(3, materialDesc.gpuHandle);
 
 	this->m_list->DrawIndexedInstanced(this->m_indices.size(), 1, 0, 0, 0);
 }
