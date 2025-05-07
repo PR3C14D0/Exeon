@@ -47,14 +47,6 @@ PixelOutput PixelMain(VertexOutput input)
     PixelOutput output;
     output.albedo = tex.Sample(texSampler, uvFlipped);
     output.normal = input.normal * 0.5f + 0.5f;
-    
-    float4 sampledOrm = metalRough.Sample(texSampler, uvFlipped);
-    
-    float occlusion = sampledOrm.r;
-    float roughness = sampledOrm.g;
-    float metallic = sampledOrm.b;
-    
-    output.orm = float4(0.0f, roughness, metallic, 1.0f);
     output.position = input.vertexPos;
     return output;
 }
