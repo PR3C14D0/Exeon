@@ -24,13 +24,13 @@ You may install Allegro using vcpkg:
 git clone https://github.com/Microsoft/vcpkg
 cd vcpkg
 bootstrap-vcpkg.bat
-vcpkg install allegro5 --triplet=x86-windows	; for win32
-vcpkg install allegro5 --triplet=x64-windows	; for win64
-vcpkg integrate install						    ; register include / libs in Visual Studio
+vcpkg install allegro5 --triplet=x86-windows    ; for win32
+vcpkg install allegro5 --triplet=x64-windows    ; for win64
+vcpkg integrate install                         ; register include / libs in Visual Studio
 ```
 
 Build:
 ```
 set ALLEGRODIR=path_to_your_allegro5_folder
-cl /Zi /MD /I %ALLEGRODIR%\include /DIMGUI_USER_CONFIG=\"examples/example_allegro5/imconfig_allegro5.h\" /I .. /I ..\.. /I ..\..\backends main.cpp ..\..\backends\imgui_impl_allegro5.cpp ..\..\imgui*.cpp /link /LIBPATH:%ALLEGRODIR%\lib allegro-5.0.10-monolith-md.lib user32.lib
+cl /Zi /MD /utf-8 /I %ALLEGRODIR%\include /DIMGUI_USER_CONFIG=\"examples/example_allegro5/imconfig_allegro5.h\" /I .. /I ..\.. /I ..\..\backends main.cpp ..\..\backends\imgui_impl_allegro5.cpp ..\..\imgui*.cpp /link /LIBPATH:%ALLEGRODIR%\lib allegro-5.0.10-monolith-md.lib user32.lib
 ```

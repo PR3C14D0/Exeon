@@ -376,10 +376,12 @@ void Mesh::LoadModel(std::string filename) {
 		aiString texPath;
 		if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0 && material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
 			const aiTexture* texture = scene->GetEmbeddedTexture(texPath.C_Str());
-			ResourceManager* resMgr = ResourceManager::GetInstance();
-			ComPtr<ID3D12Resource> resource;
-			resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, texture->mFilename.C_Str(), resource);
-			this->m_textures[i] = resource;
+			if (texture != nullptr) {
+				ResourceManager* resMgr = ResourceManager::GetInstance();
+				ComPtr<ID3D12Resource> resource;
+				resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, texture->mFilename.C_Str(), resource);
+				this->m_textures[i] = resource;
+			}
 		}
 	}
 }

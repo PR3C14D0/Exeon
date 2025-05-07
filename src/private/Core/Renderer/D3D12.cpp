@@ -13,6 +13,7 @@ D3D12::D3D12() : Renderer::Renderer() {
 	this->m_nPositionIndex = 0;
 	this->sceneMgr = SceneManager::GetInstance();
 	this->m_samplerHeap = nullptr;
+	this->m_editor = Editor::GetInstance();
 }
 
 void D3D12::Init(HWND hwnd) {
@@ -168,6 +169,8 @@ void D3D12::Init(HWND hwnd) {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 
 	ImGui::StyleColorsDark();
+
+	this->m_editor->Init();
 }
 
 void D3D12::InitDepth() {
@@ -250,7 +253,6 @@ void D3D12::Update() {
 	};
 	this->m_list->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-
 	this->sceneMgr->Render();
 
 	this->ResourceBarrier(this->m_albedoBuff, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -289,6 +291,8 @@ void D3D12::Update() {
 	ImGui_ImplWin32_NewFrame();
 	ImGui_ImplDX12_NewFrame();
 	ImGui::NewFrame();
+
+	this->m_editor->Update();
 
 	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), this->m_list.Get());

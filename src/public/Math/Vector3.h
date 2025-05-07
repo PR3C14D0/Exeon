@@ -1,7 +1,6 @@
 #pragma once
 #include <iostream>
 
-
 struct Vector3 {
 	float x, y, z;
 	Vector3() = default;

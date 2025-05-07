@@ -1,3 +1,7 @@
+
+# IMPORTANT: SDL3 IS IN DEVELOPMENT, AS OF 2023-05-30, EMSCRIPTEN DOESN'T SUPPORT SDL3 YET.
+# WE ARE LEAVING THIS MAKEFILE AROUND FOR THE DAY IT WILL SUPPORT IT.
+
 #
 # Makefile to use with SDL+emscripten
 # See https://emscripten.org/docs/getting_started/downloads.html
@@ -35,6 +39,9 @@ EMS =
 EMS += -s USE_SDL=2
 EMS += -s DISABLE_EXCEPTION_CATCHING=1
 LDFLAGS += -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_EXIT_RUNTIME=0 -s ASSERTIONS=1
+
+# Build as single file (binary text encoded in .html file)
+#LDFLAGS += -sSINGLE_FILE
 
 # Uncomment next line to fix possible rendering bugs with Emscripten version older then 1.39.0 (https://github.com/ocornut/imgui/issues/2877)
 #EMS += -s BINARYEN_TRAP_MODE=clamp

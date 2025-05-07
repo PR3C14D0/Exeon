@@ -11,6 +11,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_dx12.h>
 #include <imgui/imgui_impl_win32.h>
+#include "Core/Editor/Editor.h"
 
 using namespace Microsoft::WRL;
 
@@ -85,6 +86,8 @@ private:
 	void InitGBufferShader();
 	Shader* m_gBufferShader;
 	ComPtr<ID3D12RootSignature> m_rootSig;
+
+	Editor* m_editor;
 
 public:
 	D3D12();
