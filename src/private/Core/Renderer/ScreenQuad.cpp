@@ -66,6 +66,7 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	Descriptor albedoDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
 	Descriptor normalDesc = renderer->m_cbvSrvHeap->GetDescriptor(1);
 	Descriptor positionDesc = renderer->m_cbvSrvHeap->GetDescriptor(2);
+	Descriptor ORMDesc = renderer->m_cbvSrvHeap->GetDescriptor(3);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
 	srvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -76,31 +77,32 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	this->m_dev->CreateShaderResourceView(renderer->m_albedoBuff.Get(), &srvDesc, albedoDesc.cpuHandle);
 	this->m_dev->CreateShaderResourceView(renderer->m_uvBuff.Get(), &srvDesc, normalDesc.cpuHandle);
 	this->m_dev->CreateShaderResourceView(renderer->m_positionBuff.Get(), &srvDesc, positionDesc.cpuHandle);
+	this->m_dev->CreateShaderResourceView(renderer->m_ORMBuff.Get(), &srvDesc, ORMDesc.cpuHandle);
 
 	CD3DX12_DESCRIPTOR_RANGE albedoRange;
 	CD3DX12_DESCRIPTOR_RANGE normalRange;
 	CD3DX12_DESCRIPTOR_RANGE positionRange;
-	CD3DX12_DESCRIPTOR_RANGE materialRange;
+	CD3DX12_DESCRIPTOR_RANGE ORMRange;
 
 	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	normalRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 	positionRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
-	materialRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
+	ORMRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
 
 	CD3DX12_ROOT_PARAMETER albedoParam;
 	CD3DX12_ROOT_PARAMETER normalParam;
 	CD3DX12_ROOT_PARAMETER positionParam;
-	CD3DX12_ROOT_PARAMETER materialParam;
+	CD3DX12_ROOT_PARAMETER ORMParam;
 	albedoParam.InitAsDescriptorTable(1, &albedoRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	normalParam.InitAsDescriptorTable(1, &normalRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	positionParam.InitAsDescriptorTable(1, &positionRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	materialParam.InitAsDescriptorTable(1, &materialRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	ORMParam.InitAsDescriptorTable(1, &ORMRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	
 	D3D12_ROOT_PARAMETER rootParams[] = {
 		albedoParam,
 		normalParam,
 		positionParam,
-		materialParam
+		ORMParam
 	};
 
 	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };

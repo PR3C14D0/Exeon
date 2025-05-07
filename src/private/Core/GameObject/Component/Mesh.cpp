@@ -122,7 +122,6 @@ void Mesh::InitConstantBuffer() {
 void Mesh::UpdateConstantBuffer() {
 	UINT nWVPSize = (sizeof(this->m_wvp) + 255) & ~255;
 	this->m_wvp.World = XMMatrixTranspose(XMMatrixIdentity());
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixScaling(0.1f, 0.1f, 0.1f));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->m_transform.rotation.x)));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform.rotation.y)));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform.rotation.z)));
@@ -164,7 +163,7 @@ void Mesh::Render() {
 	Descriptor wvpDesc = this->m_cbv_srvHeap->GetDescriptor(this->m_nWvpIndex);
 
 	this->m_list->SetGraphicsRootDescriptorTable(0, this->m_samplerDescriptor.gpuHandle);
-	this->m_list->SetGraphicsRootDescriptorTable(2, wvpDesc.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(3, wvpDesc.gpuHandle);
 
 	int i = 0;
 	for (D3D12_VERTEX_BUFFER_VIEW vbv : this->m_VBVs) {
@@ -173,8 +172,11 @@ void Mesh::Render() {
 		this->m_list->IASetIndexBuffer(&ibv);
 
 		UINT nTextureIndex = this->m_textureIndices[i];
+		UINT nMetalIndex = this->m_nORMIndices[i];
 		Descriptor texDesc = this->m_cbv_srvHeap->GetDescriptor(nTextureIndex);
+		Descriptor metalDesc = this->m_cbv_srvHeap->GetDescriptor(nMetalIndex);
 		this->m_list->SetGraphicsRootDescriptorTable(1, texDesc.gpuHandle);
+		this->m_list->SetGraphicsRootDescriptorTable(2, metalDesc.gpuHandle);
 
 		this->m_list->DrawIndexedInstanced(this->m_indices[i].size(), 1, 0, 0, 0);
 		i++;
@@ -189,22 +191,27 @@ void Mesh::InitPipeline() {
 	UINT nPixelSize = this->m_shader->GetBuffer(SHADER_BUFFER::PIXEL, lpPixel);
 
 	CD3DX12_DESCRIPTOR_RANGE albedoRange;
+	CD3DX12_DESCRIPTOR_RANGE ORMRange;
 	CD3DX12_DESCRIPTOR_RANGE samplerRange;
 	CD3DX12_DESCRIPTOR_RANGE wvpRange;
 	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	ORMRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 	samplerRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
 	wvpRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 
 	CD3DX12_ROOT_PARAMETER albedoParam;
+	CD3DX12_ROOT_PARAMETER ORMParam;
 	CD3DX12_ROOT_PARAMETER samplerParam;
 	CD3DX12_ROOT_PARAMETER wvpParam;
 	albedoParam.InitAsDescriptorTable(1, &albedoRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	ORMParam.InitAsDescriptorTable(1, &ORMRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	samplerParam.InitAsDescriptorTable(1, &samplerRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	wvpParam.InitAsDescriptorTable(1, &wvpRange, D3D12_SHADER_VISIBILITY_VERTEX);
 
 	D3D12_ROOT_PARAMETER rootParams[] = {
 		samplerParam,
 		albedoParam,
+		ORMParam,
 		wvpParam
 	};
 
@@ -254,7 +261,8 @@ void Mesh::InitPipeline() {
 	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RTVFormats[1] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RTVFormats[2] = DXGI_FORMAT_B8G8R8A8_UNORM;
-	plDesc.NumRenderTargets = 3;
+	plDesc.RTVFormats[3] = DXGI_FORMAT_B8G8R8A8_UNORM;
+	plDesc.NumRenderTargets = 4;
 	plDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	plDesc.SampleDesc.Count = 8;
 	plDesc.SampleMask = UINT32_MAX;
@@ -281,9 +289,10 @@ void Mesh::D3D12Init(D3D12* renderer) {
 void Mesh::InitSampler(D3D12* renderer) {
 	this->m_cbv_srvHeap = renderer->m_cbvSrvHeap;
 	UINT nNumTextures = this->m_textures.size();
-	this->m_cbv_srvHeap->Allocate(this->m_textures.size());
+	UINT nNumORMTextures = this->m_ORMTextures.size();
+	this->m_cbv_srvHeap->Allocate(nNumTextures + nNumORMTextures);
 	UINT nLastIndex = m_cbv_srvHeap->GetLastDescriptorIndex();
-	UINT nFirstIndex = nLastIndex - nNumTextures + 1;
+	UINT nFirstIndex = nLastIndex - nNumTextures;
 
 	UINT nActualIndex = nFirstIndex;
 	for (std::pair<UINT, ComPtr<ID3D12Resource>> resource : this->m_textures) {
@@ -295,9 +304,23 @@ void Mesh::InitSampler(D3D12* renderer) {
 
 		Descriptor resDesc = m_cbv_srvHeap->GetDescriptor(nActualIndex);
 		this->m_textureIndices[resource.first] = nActualIndex;
-		nActualIndex++;
 
 		this->m_dev->CreateShaderResourceView(resource.second.Get(), &srvDesc, resDesc.cpuHandle);
+		nActualIndex++;
+	}
+
+	for (std::pair<UINT, ComPtr<ID3D12Resource>> resource : this->m_ORMTextures) {
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format = resource.second->GetDesc().Format;
+
+		Descriptor resDesc = m_cbv_srvHeap->GetDescriptor(nActualIndex);
+		this->m_nORMIndices[resource.first] = nActualIndex;
+
+		this->m_dev->CreateShaderResourceView(resource.second.Get(), &srvDesc, resDesc.cpuHandle);
+		nActualIndex++;
 	}
 
 	renderer->m_samplerHeap->Allocate(1);
@@ -374,13 +397,27 @@ void Mesh::LoadModel(std::string filename) {
 		this->m_vertices[i] = vertices;
 
 		aiString texPath;
-		if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0 && material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
+		aiString metalPath;
+		if (material->GetTextureCount(aiTextureType_BASE_COLOR) > 0 && material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
 			const aiTexture* texture = scene->GetEmbeddedTexture(texPath.C_Str());
 			if (texture != nullptr) {
 				ResourceManager* resMgr = ResourceManager::GetInstance();
 				ComPtr<ID3D12Resource> resource;
 				resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, texture->mFilename.C_Str(), resource);
+				resource->SetName(L"Mesh Base color");
 				this->m_textures[i] = resource;
+			}
+		}
+
+		if (material->GetTextureCount(aiTextureType_METALNESS) > 0 && material->GetTexture(aiTextureType_METALNESS, 0, &metalPath) == AI_SUCCESS) {
+			const aiTexture* texture = scene->GetEmbeddedTexture(metalPath.C_Str());
+
+			if (texture != nullptr) {
+				ResourceManager* resMgr = ResourceManager::GetInstance();
+				ComPtr<ID3D12Resource> resource;
+				resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, texture->mFilename.C_Str(), resource);
+				resource->SetName(L"Mesh Metallic Roughness");
+				this->m_ORMTextures[i] = resource;
 			}
 		}
 	}
