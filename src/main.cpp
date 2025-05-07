@@ -47,7 +47,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	);
 
 	if (hwnd)
-		ShowWindow(hwnd, nShowCmd);
+		ShowWindow(hwnd, SW_SHOWMAXIMIZED);
 #ifndef NDEBUG
 	spdlog::set_level(spdlog::level::debug);
 #endif
