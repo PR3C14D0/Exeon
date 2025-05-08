@@ -74,10 +74,10 @@ private:
 	void InitPipeline();
 	void InitSampler(D3D12* renderer);
 
-	Transform m_transform;
+	Transform* m_transform;
 	SceneManager* m_sceneMgr;
 public:
-	Mesh(std::string name, Transform& parentTransform);
+	Mesh(std::string name, Transform* parentTransform);
 
 	void Init();
 	void Update();

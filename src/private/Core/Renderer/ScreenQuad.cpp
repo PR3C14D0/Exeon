@@ -5,6 +5,8 @@ ScreenQuad::ScreenQuad() {
 	this->m_core = Core::GetInstance();
 	this->m_renderer = nullptr;
 	this->m_shader = nullptr;
+	this->m_sceneMgr = SceneManager::GetInstance();
+	this->m_nSqCBuffIndex = -1;
 }
 
 void ScreenQuad::Init() {
@@ -83,26 +85,31 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	CD3DX12_DESCRIPTOR_RANGE normalRange;
 	CD3DX12_DESCRIPTOR_RANGE positionRange;
 	CD3DX12_DESCRIPTOR_RANGE ORMRange;
+	CD3DX12_DESCRIPTOR_RANGE cbuffRange;
 
 	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	normalRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 	positionRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
 	ORMRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
+	cbuffRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 
 	CD3DX12_ROOT_PARAMETER albedoParam;
 	CD3DX12_ROOT_PARAMETER normalParam;
 	CD3DX12_ROOT_PARAMETER positionParam;
 	CD3DX12_ROOT_PARAMETER ORMParam;
+	CD3DX12_ROOT_PARAMETER cbuffParam;
 	albedoParam.InitAsDescriptorTable(1, &albedoRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	normalParam.InitAsDescriptorTable(1, &normalRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	positionParam.InitAsDescriptorTable(1, &positionRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	ORMParam.InitAsDescriptorTable(1, &ORMRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	cbuffParam.InitAsDescriptorTable(1, &cbuffRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	
 	D3D12_ROOT_PARAMETER rootParams[] = {
 		albedoParam,
 		normalParam,
 		positionParam,
-		ORMParam
+		ORMParam,
+		cbuffParam
 	};
 
 	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
@@ -157,6 +164,7 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	plDesc.SampleMask = UINT32_MAX;
 
 	ThrowIfFailed(this->m_dev->CreateGraphicsPipelineState(&plDesc, IID_PPV_ARGS(this->m_plState.GetAddressOf())));
+	this->InitConstantBuffer();
 }
 
 void ScreenQuad::Render() {
@@ -165,11 +173,54 @@ void ScreenQuad::Render() {
 	}
 } 
 
+void ScreenQuad::InitConstantBuffer() {
+	if (D3D12* renderer = dynamic_cast<D3D12*>(this->m_renderer)) {
+		Camera* currentCamera = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera();
+
+		this->m_sqCBuffData.cameraPosition = XMFLOAT3(
+			currentCamera->transform.location.x,
+			currentCamera->transform.location.y,
+			currentCamera->transform.location.z
+		);
+
+		UINT nConstantBufferSize = (sizeof(this->m_sqCBuffData) + 255) & ~255;
+		renderer->CreateBuffer(&this->m_sqCBuffData, nConstantBufferSize, m_sqCBuffer);
+
+		renderer->m_cbvSrvHeap->Allocate(1);
+		this->m_nSqCBuffIndex = renderer->m_cbvSrvHeap->GetLastDescriptorIndex();
+		Descriptor sqBuffDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_nSqCBuffIndex);
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = { };
+		cbvDesc.BufferLocation = this->m_sqCBuffer->GetGPUVirtualAddress();
+		cbvDesc.SizeInBytes = nConstantBufferSize;
+		this->m_dev->CreateConstantBufferView(&cbvDesc, sqBuffDesc.cpuHandle);
+	}
+}
+
+void ScreenQuad::UpdateConstantBuffer() {
+	Camera* currentCamera = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera();
+
+	this->m_sqCBuffData.cameraPosition = XMFLOAT3(
+		currentCamera->transform.location.x,
+		currentCamera->transform.location.y,
+		currentCamera->transform.location.z
+	);
+
+	UINT nConstantBufferSize = (sizeof(this->m_sqCBuffData) + 255) & ~255;
+
+	PVOID pData;
+	ThrowIfFailed(this->m_sqCBuffer->Map(0, nullptr, &pData));
+	memcpy(pData, &this->m_sqCBuffData, nConstantBufferSize);
+	this->m_sqCBuffer->Unmap(0, nullptr);
+}
+
 void ScreenQuad::D3D12Render(D3D12* renderer) {
+	this->UpdateConstantBuffer();
 	Descriptor albedoDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
 	Descriptor normalDesc = renderer->m_cbvSrvHeap->GetDescriptor(1);
 	Descriptor positionDesc = renderer->m_cbvSrvHeap->GetDescriptor(2);
 	Descriptor materialDesc = renderer->m_cbvSrvHeap->GetDescriptor(3);
+	Descriptor sqBuffDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_nSqCBuffIndex);
 	this->m_list->OMSetRenderTargets(1, &this->m_rtvDescriptor.cpuHandle, FALSE, nullptr);
 	this->m_list->SetPipelineState(this->m_plState.Get());
 	this->m_list->ClearRenderTargetView(this->m_rtvDescriptor.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
@@ -183,6 +234,8 @@ void ScreenQuad::D3D12Render(D3D12* renderer) {
 	this->m_list->SetGraphicsRootDescriptorTable(1, normalDesc.gpuHandle);
 	this->m_list->SetGraphicsRootDescriptorTable(2, positionDesc.gpuHandle);
 	this->m_list->SetGraphicsRootDescriptorTable(3, materialDesc.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(3, materialDesc.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(4, sqBuffDesc.gpuHandle);
 
 	this->m_list->DrawIndexedInstanced(this->m_indices.size(), 1, 0, 0, 0);
 }

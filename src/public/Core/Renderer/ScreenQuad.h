@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <d3d12.h>
 #include <DirectXTK/d3dx12.h>
+#include <DXMath/DirectXMath.h>
 #include <wrl.h>
 #include <vector>
 #include "Util.h"
@@ -14,6 +15,12 @@ using namespace Microsoft::WRL;
 class Core;
 class Renderer;
 class D3D12;
+class SceneManager;
+
+
+struct ScreenQuadBuffer {
+	XMFLOAT3 cameraPosition;
+};
 
 class ScreenQuad {
 private:
@@ -41,8 +48,16 @@ private:
 
 	ComPtr<ID3D12RootSignature> m_rootSig;
 	ComPtr<ID3D12PipelineState> m_plState;
+
+	SceneManager* m_sceneMgr;
+	ComPtr<ID3D12Resource> m_sqCBuffer;
+	ScreenQuadBuffer m_sqCBuffData;
+	UINT m_nSqCBuffIndex;
 	
 	Shader* m_shader;
+
+	void InitConstantBuffer();
+	void UpdateConstantBuffer();
 public:
 	ScreenQuad();
 

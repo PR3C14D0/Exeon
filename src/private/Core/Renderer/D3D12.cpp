@@ -141,6 +141,8 @@ void D3D12::Init(HWND hwnd) {
 	// We'll allocate the initial value for our ScreenQuad.
 	this->m_cbvSrvHeap = new DescriptorHeap(4, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 
+	this->sceneMgr->Init();
+
 	this->m_screenQuad = new ScreenQuad();
 	this->m_screenQuad->Init();
 	this->InitGBufferShader();

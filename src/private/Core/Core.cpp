@@ -18,7 +18,6 @@ void Core::Init() {
 
 	this->m_renderer = new D3D12();
 	m_renderer->Init(this->m_hwnd);
-	m_sceneManager->Init();
 	this->m_resMgr = ResourceManager::GetInstance();
 	this->m_resMgr->Init();
 }

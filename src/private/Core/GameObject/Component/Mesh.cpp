@@ -5,7 +5,7 @@
 #include "Core/Scene/SceneManager.h"
 
 
-Mesh::Mesh(std::string name, Transform& parentTransform) : Component::Component(name) {
+Mesh::Mesh(std::string name, Transform* parentTransform) : Component::Component(name) {
 	this->m_core = Core::GetInstance();
 	this->m_sceneMgr = SceneManager::GetInstance();
 
@@ -26,10 +26,10 @@ Mesh::Mesh(std::string name, Transform& parentTransform) : Component::Component(
 	UINT nWidth, nHeight = 0;
 	this->m_core->GetWindowSize(nWidth, nHeight);
 
-	this->m_wvp.World = XMMatrixTranspose(XMMatrixIdentity() * XMMatrixTranslation(this->m_transform.location.x, this->m_transform.location.y, this->m_transform.location.z));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->m_transform.rotation.x)));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform.rotation.y)));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform.rotation.z)));
+	this->m_wvp.World = XMMatrixTranspose(XMMatrixIdentity() * XMMatrixTranslation(this->m_transform->location.x, this->m_transform->location.y, this->m_transform->location.z));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->m_transform->rotation.x)));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform->rotation.y)));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform->rotation.z)));
 
 	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity());
 	this->m_wvp.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovRH(XMConvertToRadians(70.f), static_cast<float>(nWidth) / static_cast<float>(nHeight), 0.01f, 3000.f));
@@ -122,13 +122,13 @@ void Mesh::InitConstantBuffer() {
 void Mesh::UpdateConstantBuffer() {
 	UINT nWVPSize = (sizeof(this->m_wvp) + 255) & ~255;
 	this->m_wvp.World = XMMatrixTranspose(XMMatrixIdentity());
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->m_transform.rotation.x)));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform.rotation.y)));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform.rotation.z)));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->m_transform->rotation.x)));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform->rotation.y)));
+	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform->rotation.z)));
 	this->m_wvp.World *= XMMatrixTranspose(XMMatrixTranslation(
-		this->m_transform.location.x, 
-		this->m_transform.location.y,
-		this->m_transform.location.z));
+		this->m_transform->location.x, 
+		this->m_transform->location.y,
+		this->m_transform->location.z));
 
 	Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
 	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity());
@@ -296,6 +296,7 @@ void Mesh::InitSampler(D3D12* renderer) {
 
 	UINT nActualIndex = nFirstIndex;
 	for (std::pair<UINT, ComPtr<ID3D12Resource>> resource : this->m_textures) {
+		if (nActualIndex > nLastIndex) break;
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = 1;
@@ -310,6 +311,7 @@ void Mesh::InitSampler(D3D12* renderer) {
 	}
 
 	for (std::pair<UINT, ComPtr<ID3D12Resource>> resource : this->m_ORMTextures) {
+		if (nActualIndex > nLastIndex) break;
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Texture2D.MipLevels = 1;

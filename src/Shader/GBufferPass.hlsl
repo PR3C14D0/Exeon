@@ -15,7 +15,7 @@ struct VertexOutput
 
 SamplerState texSampler : register(s0);
 Texture2D tex : register(t0);
-Texture2D metalRough : register(t1);
+Texture2D ormTex : register(t1);
 
 VertexOutput VertexMain(float4 position : POSITION, float4 normal : NORMAL, float2 uv : TEXCOORD)
 {
@@ -47,6 +47,7 @@ PixelOutput PixelMain(VertexOutput input)
     PixelOutput output;
     output.albedo = tex.Sample(texSampler, uvFlipped);
     output.normal = input.normal * 0.5f + 0.5f;
+    output.orm = ormTex.Sample(texSampler, uvFlipped);
     output.position = input.vertexPos;
     return output;
 }
