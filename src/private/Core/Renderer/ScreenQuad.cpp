@@ -67,7 +67,7 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 
 	Descriptor albedoDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
 	Descriptor normalDesc = renderer->m_cbvSrvHeap->GetDescriptor(1);
-	Descriptor positionDesc = renderer->m_cbvSrvHeap->GetDescriptor(2);
+	Descriptor depthDesc = renderer->m_cbvSrvHeap->GetDescriptor(2);
 	Descriptor ORMDesc = renderer->m_cbvSrvHeap->GetDescriptor(3);
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
@@ -76,38 +76,44 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	srvDesc.Texture2D.MipLevels = 1;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
+	D3D12_SHADER_RESOURCE_VIEW_DESC dsvSrvDesc = { };
+	dsvSrvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	dsvSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+	dsvSrvDesc.Texture2D.MipLevels = 1;
+	dsvSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
 	this->m_dev->CreateShaderResourceView(renderer->m_albedoBuff.Get(), &srvDesc, albedoDesc.cpuHandle);
 	this->m_dev->CreateShaderResourceView(renderer->m_uvBuff.Get(), &srvDesc, normalDesc.cpuHandle);
-	this->m_dev->CreateShaderResourceView(renderer->m_positionBuff.Get(), &srvDesc, positionDesc.cpuHandle);
+	this->m_dev->CreateShaderResourceView(renderer->m_depthBuffer.Get(), &dsvSrvDesc, depthDesc.cpuHandle);
 	this->m_dev->CreateShaderResourceView(renderer->m_ORMBuff.Get(), &srvDesc, ORMDesc.cpuHandle);
 
 	CD3DX12_DESCRIPTOR_RANGE albedoRange;
 	CD3DX12_DESCRIPTOR_RANGE normalRange;
-	CD3DX12_DESCRIPTOR_RANGE positionRange;
+	CD3DX12_DESCRIPTOR_RANGE depthRange;
 	CD3DX12_DESCRIPTOR_RANGE ORMRange;
 	CD3DX12_DESCRIPTOR_RANGE cbuffRange;
 
 	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	normalRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-	positionRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+	depthRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
 	ORMRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
 	cbuffRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 
 	CD3DX12_ROOT_PARAMETER albedoParam;
 	CD3DX12_ROOT_PARAMETER normalParam;
-	CD3DX12_ROOT_PARAMETER positionParam;
+	CD3DX12_ROOT_PARAMETER depthParam;
 	CD3DX12_ROOT_PARAMETER ORMParam;
 	CD3DX12_ROOT_PARAMETER cbuffParam;
 	albedoParam.InitAsDescriptorTable(1, &albedoRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	normalParam.InitAsDescriptorTable(1, &normalRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	positionParam.InitAsDescriptorTable(1, &positionRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	depthParam.InitAsDescriptorTable(1, &depthRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	ORMParam.InitAsDescriptorTable(1, &ORMRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	cbuffParam.InitAsDescriptorTable(1, &cbuffRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	
 	D3D12_ROOT_PARAMETER rootParams[] = {
 		albedoParam,
 		normalParam,
-		positionParam,
+		depthParam,
 		ORMParam,
 		cbuffParam
 	};
@@ -177,6 +183,23 @@ void ScreenQuad::InitConstantBuffer() {
 	if (D3D12* renderer = dynamic_cast<D3D12*>(this->m_renderer)) {
 		Camera* currentCamera = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera();
 
+		Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
+		this->m_sqCBuffData.InverseView = XMMatrixTranspose(XMMatrixIdentity());
+		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(currentCamera->transform.rotation.x)));
+		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(currentCamera->transform.rotation.y)));
+		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(currentCamera->transform.rotation.z)));
+		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixTranslation(
+			currentCamera->transform.location.x,
+			currentCamera->transform.location.y,
+			currentCamera->transform.location.z));
+
+		this->m_sqCBuffData.InverseProjection = XMMatrixTranspose(XMMatrixPerspectiveFovRH(
+			XMConvertToRadians(70.f), 
+			static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
+			0.01f, 
+			3000.f));
+
+
 		this->m_sqCBuffData.cameraPosition = XMFLOAT3(
 			currentCamera->transform.location.x,
 			currentCamera->transform.location.y,
@@ -198,27 +221,49 @@ void ScreenQuad::InitConstantBuffer() {
 }
 
 void ScreenQuad::UpdateConstantBuffer() {
-	Camera* currentCamera = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera();
+	if (D3D12* renderer = dynamic_cast<D3D12*>(this->m_renderer)) {
+		Camera* currentCamera = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera();
 
-	this->m_sqCBuffData.cameraPosition = XMFLOAT3(
-		currentCamera->transform.location.x,
-		currentCamera->transform.location.y,
-		currentCamera->transform.location.z
-	);
+		Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
+		this->m_sqCBuffData.InverseView = XMMatrixTranspose(XMMatrixIdentity());
+		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(currentCamera->transform.rotation.x)));
+		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(currentCamera->transform.rotation.y)));
+		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(currentCamera->transform.rotation.z)));
+		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixTranslation(
+			currentCamera->transform.location.x,
+			currentCamera->transform.location.y,
+			currentCamera->transform.location.z));
+		this->m_sqCBuffData.InverseView =  (XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseView));
 
-	UINT nConstantBufferSize = (sizeof(this->m_sqCBuffData) + 255) & ~255;
+		this->m_sqCBuffData.InverseProjection = XMMatrixTranspose(XMMatrixPerspectiveFovRH(
+			XMConvertToRadians(70.f),
+			static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
+			0.01f,
+			3000.f));
+		this->m_sqCBuffData.InverseProjection = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseProjection);
+		this->m_sqCBuffData.screenSize = XMFLOAT2(renderer->m_nWidth, renderer->m_nHeight);
 
-	PVOID pData;
-	ThrowIfFailed(this->m_sqCBuffer->Map(0, nullptr, &pData));
-	memcpy(pData, &this->m_sqCBuffData, nConstantBufferSize);
-	this->m_sqCBuffer->Unmap(0, nullptr);
+
+		this->m_sqCBuffData.cameraPosition = XMFLOAT3(
+			currentCamera->transform.location.x,
+			currentCamera->transform.location.y,
+			currentCamera->transform.location.z
+		);
+
+		UINT nConstantBufferSize = (sizeof(this->m_sqCBuffData) + 255) & ~255;
+
+		PVOID pData;
+		ThrowIfFailed(this->m_sqCBuffer->Map(0, nullptr, &pData));
+		memcpy(pData, &this->m_sqCBuffData, nConstantBufferSize);
+		this->m_sqCBuffer->Unmap(0, nullptr);
+	}
 }
 
 void ScreenQuad::D3D12Render(D3D12* renderer) {
 	this->UpdateConstantBuffer();
 	Descriptor albedoDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
 	Descriptor normalDesc = renderer->m_cbvSrvHeap->GetDescriptor(1);
-	Descriptor positionDesc = renderer->m_cbvSrvHeap->GetDescriptor(2);
+	Descriptor depthParam = renderer->m_cbvSrvHeap->GetDescriptor(2);
 	Descriptor materialDesc = renderer->m_cbvSrvHeap->GetDescriptor(3);
 	Descriptor sqBuffDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_nSqCBuffIndex);
 	this->m_list->OMSetRenderTargets(1, &this->m_rtvDescriptor.cpuHandle, FALSE, nullptr);
@@ -232,8 +277,7 @@ void ScreenQuad::D3D12Render(D3D12* renderer) {
 	
 	this->m_list->SetGraphicsRootDescriptorTable(0, albedoDesc.gpuHandle);
 	this->m_list->SetGraphicsRootDescriptorTable(1, normalDesc.gpuHandle);
-	this->m_list->SetGraphicsRootDescriptorTable(2, positionDesc.gpuHandle);
-	this->m_list->SetGraphicsRootDescriptorTable(3, materialDesc.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(2, depthParam.gpuHandle);
 	this->m_list->SetGraphicsRootDescriptorTable(3, materialDesc.gpuHandle);
 	this->m_list->SetGraphicsRootDescriptorTable(4, sqBuffDesc.gpuHandle);
 

@@ -19,7 +19,10 @@ class SceneManager;
 
 
 struct ScreenQuadBuffer {
+	XMMATRIX InverseView;
+	XMMATRIX InverseProjection;
 	XMFLOAT3 cameraPosition;
+	XMFLOAT2 screenSize;
 };
 
 class ScreenQuad {

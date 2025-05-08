@@ -187,20 +187,20 @@ void D3D12::InitDepth() {
 	Descriptor dsv = this->m_dsvHeap->GetDescriptor(0);
 
 	D3D12_RESOURCE_DESC depthBuffDesc = { };
-	depthBuffDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthBuffDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 	depthBuffDesc.SampleDesc.Count = 8;
 	depthBuffDesc.Width = this->m_nWidth;
 	depthBuffDesc.Height = this->m_nHeight;
 	depthBuffDesc.MipLevels = 1;
 	depthBuffDesc.DepthOrArraySize = 1;
-	depthBuffDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+	depthBuffDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 	depthBuffDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
 	D3D12_HEAP_PROPERTIES heapProps = { };
 	heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
 	
 	D3D12_CLEAR_VALUE dsvClear = { };
-	dsvClear.Format = depthBuffDesc.Format;
+	dsvClear.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvClear.DepthStencil.Depth = 1.f;
 	dsvClear.DepthStencil.Stencil = 0.f;
 
@@ -214,7 +214,7 @@ void D3D12::InitDepth() {
 	this->m_depthBuffer->SetName(L"Depth buffer");
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = { };
-	dsvDesc.Format = depthBuffDesc.Format;
+	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
 	

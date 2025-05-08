@@ -1,7 +1,10 @@
 #define PI 3.14159265359
 cbuffer ScreenQuadBuffer : register(b0)
 {
+    matrix InverseView;
+    matrix InverseProjection;
     float3 cameraPos;
+    float2 screenSize;
 }
 
 struct VertexOutput
@@ -18,7 +21,7 @@ VertexOutput VertexMain(float4 position : POSITION0, float2 uv : TEXCOORD0)
 
 Texture2DMS<float4> albedo : register(t0);
 Texture2DMS<float4> normal : register(t1);
-Texture2DMS<float4> position : register(t2);
+Texture2DMS<float4> depthTex : register(t2);
 Texture2DMS<float4> orm : register(t3);
 
 struct PixelOutput
@@ -66,6 +69,32 @@ float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
     return ggx1 * ggx2;
 }
 
+float LinearizeDepth(float depth)
+{
+    float z = depth * 2.0 - 1.0; 
+    float near = 0.1f; 
+    float far = 100.0f; 
+    return (2.0 * near * far) / (far + near - z * (far - near));
+}
+
+float3 ReconstructPosition(float2 pixelCoord, uint index)
+{
+    float depth = LinearizeDepth(depthTex.Load(pixelCoord, index).r);
+    
+    float2 ndc = (pixelCoord / screenSize) * 2.0f - 1.0f;
+    ndc.y *= -1.0f;
+    
+    float4 clipPos = float4(ndc.xy, depth, 1.0f);
+    
+    float4 viewPos = mul(InverseProjection, clipPos);
+    viewPos /= viewPos.w;
+
+    float4 worldPos = mul(InverseView, viewPos);
+
+    return worldPos.xyz;
+}
+
+
 PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {
     float3 lightPos = float3(0.f, 5.f, 5.f);
@@ -73,7 +102,8 @@ PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
     
     float4 albedoColor = albedo.Load(input.position.xy, index);
     float4 nml = normalize(normal.Load(input.position.xy, index) * 2 - 1);
-    float4 vertexPos = position.Load(input.position.xy, index);
+    float3 pos = ReconstructPosition(input.position.xy, index);
+    float4 vertexPos = float4(pos.x, pos.y, pos.z, 1.f);
     
     /* ORM G-Buffer */
     float3 ormData = orm.Load(input.position.xy, index).rgb;
@@ -115,10 +145,10 @@ PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
     
     Lo += (kD * albedoColor.xyz / PI + specular) * radiance * NdotL;
     
-    float3 ambient = float3(0.3f, 0.3f, 0.3f) * albedoColor.xyz * ao;
-    ambient = lerp(ambient, albedoColor.xyz * ao * 0.2, metallic); // Los metales reflejan más el ambiente
+    float3 ambient = 0.1f * albedoColor.xyz * ao;
     
     float3 color = ambient + Lo;
+    //float3 color = vertexPos.xyz;
     
     PixelOutput output;
     
