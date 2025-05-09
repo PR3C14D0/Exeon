@@ -4,7 +4,7 @@ EditorCamera::EditorCamera(std::string name) : Camera(name) {
 	this->m_fSensX = 5.f;
 	this->m_fSensY = 5.f;
 
-	this->m_fSpeed = 15.f;
+	this->m_fSpeed = 150.f;
 }
 
 void EditorCamera::Init() {

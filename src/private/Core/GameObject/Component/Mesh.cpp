@@ -293,7 +293,7 @@ void Mesh::InitSampler(D3D12* renderer) {
 	UINT nNumORMTextures = this->m_ORMTextures.size();
 	this->m_cbv_srvHeap->Allocate(nNumTextures + nNumORMTextures);
 	UINT nLastIndex = m_cbv_srvHeap->GetLastDescriptorIndex();
-	UINT nFirstIndex = nLastIndex - nNumTextures;
+	UINT nFirstIndex = nLastIndex - (nNumTextures + nNumORMTextures);
 
 	UINT nActualIndex = nFirstIndex;
 	for (std::pair<UINT, ComPtr<ID3D12Resource>> resource : this->m_textures) {
@@ -351,6 +351,8 @@ void Mesh::LoadModel(std::string filename) {
 		return;
 	};
 
+	UINT nIndex = 0;
+
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(filename, NULL);
 
@@ -401,12 +403,14 @@ void Mesh::LoadModel(std::string filename) {
 
 		aiString texPath;
 		aiString metalPath;
+		nIndex++;
 		if (material->GetTextureCount(aiTextureType_BASE_COLOR) > 0 && material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
 			const aiTexture* texture = scene->GetEmbeddedTexture(texPath.C_Str());
 			if (texture != nullptr) {
 				ResourceManager* resMgr = ResourceManager::GetInstance();
+				std::string name = std::string(texPath.C_Str());
 				ComPtr<ID3D12Resource> resource;
-				resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, texture->mFilename.C_Str(), resource);
+				resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, name, resource);
 				resource->SetName(L"Mesh Base color");
 				this->m_textures[i] = resource;
 			}
@@ -417,8 +421,9 @@ void Mesh::LoadModel(std::string filename) {
 
 			if (texture != nullptr) {
 				ResourceManager* resMgr = ResourceManager::GetInstance();
+				std::string name = std::string(metalPath.C_Str());
 				ComPtr<ID3D12Resource> resource;
-				resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, texture->mFilename.C_Str(), resource);
+				resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, name, resource);
 				resource->SetName(L"Mesh Metallic Roughness");
 				this->m_ORMTextures[i] = resource;
 			}

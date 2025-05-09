@@ -10,6 +10,7 @@
 #include <assimp/postprocess.h>
 #include <map>
 #include "Util.h"
+#include <string>
 
 #include "Core/GameObject/Component/Component.h"
 #include "Core/Renderer/Shader.h"
