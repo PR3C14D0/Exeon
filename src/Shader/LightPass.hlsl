@@ -69,22 +69,15 @@ float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
     return ggx1 * ggx2;
 }
 
-float LinearizeDepth(float depth)
+float3 ReconstructPosition(int2 pixelCoord, uint index)
 {
-    float z = depth * 2.0 - 1.0; 
-    float near = 0.1f; 
-    float far = 100.0f; 
-    return (2.0 * near * far) / (far + near - z * (far - near));
-}
+    float depth = depthTex.Load(pixelCoord, index).r;
 
-float3 ReconstructPosition(float2 pixelCoord, uint index)
-{
-    float depth = LinearizeDepth(depthTex.Load(pixelCoord, index).r);
-    
-    float2 ndc = (pixelCoord / screenSize) * 2.0f - 1.0f;
+    float2 ndc = (float2(pixelCoord) / screenSize) * 2.0f - 1.0f;
     ndc.y *= -1.0f;
     
-    float4 clipPos = float4(ndc.xy, depth, 1.0f);
+    float z = depth * 2.0f - 1.0f;
+    float4 clipPos = float4(ndc.xy, z, 1.0f);
     
     float4 viewPos = mul(InverseProjection, clipPos);
     viewPos /= viewPos.w;
@@ -94,64 +87,55 @@ float3 ReconstructPosition(float2 pixelCoord, uint index)
     return worldPos.xyz;
 }
 
-
 PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {
-    float3 lightPos = float3(0.f, 5.f, 5.f);
-    float3 lightColor = float3(100.f, 100.f, 100.f);
+    float3 lightPos = float3(0.f, 20.f, 20.f);
+    float3 lightColor = float3(500.f, 500.f, 500.f);
     
-    float4 albedoColor = albedo.Load(input.position.xy, index);
-    float4 nml = normalize(normal.Load(input.position.xy, index) * 2 - 1);
-    float3 pos = ReconstructPosition(input.position.xy, index);
-    float4 vertexPos = float4(pos.x, pos.y, pos.z, 1.f);
+    int2 pixelCoord = int2(input.position.xy);
+
+    float3 albedoColor = albedo.Load(pixelCoord, index).rgb;
+    float3 N = normalize(normal.Load(pixelCoord, index).rgb * 2 - 1);
+    float3 pos = ReconstructPosition(pixelCoord, index);
     
-    /* ORM G-Buffer */
-    float3 ormData = orm.Load(input.position.xy, index).rgb;
+    float3 ormData = orm.Load(pixelCoord, index).rgb;
     float ao = ormData.r;
     float roughness = ormData.g;
     float metallic = ormData.b;
-    
-    
-    float3 N = nml.xyz;
-    float3 V = normalize(cameraPos - vertexPos.xyz);
-    float3 F0 = float3(.04f, .04f, .04f);
-    F0 = lerp(F0, albedoColor.xyz, metallic);
-    
-    /* Reflectance equation */
-    float3 Lo = float3(0.f, 0.f, 0.f);
-    
-    /* Calculate light radiance */
-    float3 L = normalize(lightPos - vertexPos.xyz);
+
+    float3 V = normalize(cameraPos - pos);
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedoColor, metallic);
+
+    float3 L = normalize(lightPos - pos);
     float3 H = normalize(V + L);
-    float distance = length(lightPos - vertexPos.xyz);
+    float distance = length(lightPos - pos);
     float attenuation = 1.0f / (distance * distance + 1.f);
     float3 radiance = lightColor * attenuation;
     radiance *= (1.0 + metallic * 0.2);
-    
-    /* Cook torrance BRDF */
+
     float NDF = DistributionGGX(N, H, roughness);
     float G = GeometrySmith(N, V, L, roughness);
     float3 F = FresnelShlick(saturate(dot(H, V)), F0);
-    
-    float3 kS = F; 
-    float3 kD = (1.0 - kS) * (1.0 - metallic);;
-    kD *= 1.f - metallic;
-    
+
+    float3 kS = F;
+    float3 kD = (1.0 - kS) * (1.0 - metallic);
+
     float3 numerator = NDF * G * F;
     float denominator = 4.f * max(dot(N, V), 0.f) * max(dot(N, L), 0.f) + 0.0001f;
     float3 specular = numerator / denominator;
-    
+
     float NdotL = max(dot(N, L), 0.f);
-    
-    Lo += (kD * albedoColor.xyz / PI + specular) * radiance * NdotL;
-    
-    float3 ambient = 0.1f * albedoColor.xyz * ao;
-    
+    float3 Lo = (kD * albedoColor / PI + specular) * radiance * NdotL;
+
+    float3 ambient = 0.1f * albedoColor * ao;
+
     float3 color = ambient + Lo;
-    //float3 color = vertexPos.xyz;
-    
+
+    /* Tonemap */
+    color = color / (color + 1.0);
+    //color = pow(saturate(color), 1.0 / 2.2);
+
     PixelOutput output;
-    
-    output.screen = float4(color.x, color.y, color.z, 1.f);
+    output.screen = float4(color, 1.f);
     return output;
 }
