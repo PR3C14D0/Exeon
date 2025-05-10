@@ -26,23 +26,40 @@ Mesh::Mesh(std::string name, Transform* parentTransform) : Component::Component(
 	UINT nWidth, nHeight = 0;
 	this->m_core->GetWindowSize(nWidth, nHeight);
 
-	this->m_wvp.World = XMMatrixTranspose(XMMatrixIdentity() * XMMatrixTranslation(this->m_transform->location.x, this->m_transform->location.y, this->m_transform->location.z));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->m_transform->rotation.x)));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform->rotation.y)));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform->rotation.z)));
+	this->m_wvp.World = (XMMatrixIdentity() * XMMatrixTranslation(this->m_transform->location.x, this->m_transform->location.y, this->m_transform->location.z));
+	this->m_wvp.World *= (XMMatrixRotationX(XMConvertToRadians(this->m_transform->rotation.x)));
+	this->m_wvp.World *= (XMMatrixRotationY(XMConvertToRadians(this->m_transform->rotation.y)));
+	this->m_wvp.World *= (XMMatrixRotationZ(XMConvertToRadians(this->m_transform->rotation.z)));
 
-	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity());
-	this->m_wvp.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovRH(XMConvertToRadians(70.f), static_cast<float>(nWidth) / static_cast<float>(nHeight), 0.01f, 3000.f));
+	this->m_wvp.View = (XMMatrixIdentity());
+	this->m_wvp.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(XMConvertToRadians(70.f), static_cast<float>(nWidth) / static_cast<float>(nHeight), 0.01f, 3000.f));
 }
 
 void Mesh::Init() {
 	Component::Init();
 	Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
-	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity());
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(cameraTransform.rotation.x)));
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(cameraTransform.rotation.y)));
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(cameraTransform.rotation.z)));
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixTranslation(cameraTransform.location.x, cameraTransform.location.y, cameraTransform.location.z));
+	XMVECTOR eye = XMVectorSet(
+		cameraTransform.location.x,
+		cameraTransform.location.y,
+		cameraTransform.location.z,
+		1.0f
+	);
+
+	float pitch = XMConvertToRadians(cameraTransform.rotation.x);
+	float yaw = XMConvertToRadians(cameraTransform.rotation.y);
+
+	XMVECTOR forward = XMVectorSet(
+		cosf(pitch) * sinf(yaw),
+		-sinf(pitch),
+		-cosf(pitch) * cosf(yaw),
+		0.0f
+	);
+
+	XMVECTOR at = XMVectorAdd(eye, forward);
+
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+	this->m_wvp.View = XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up));
 
 
 	if (D3D12* d3d12 = dynamic_cast<D3D12*>(this->m_renderer)) {
@@ -121,27 +138,42 @@ void Mesh::InitConstantBuffer() {
 
 void Mesh::UpdateConstantBuffer() {
 	UINT nWVPSize = (sizeof(this->m_wvp) + 255) & ~255;
-	this->m_wvp.World = XMMatrixTranspose(XMMatrixIdentity());
+	this->m_wvp.World = (XMMatrixIdentity());
 
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(this->m_transform->rotation.x)));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(this->m_transform->rotation.y)));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(this->m_transform->rotation.z)));
-	this->m_wvp.World *= XMMatrixTranspose(XMMatrixTranslation(
+	this->m_wvp.World *= (XMMatrixRotationX(XMConvertToRadians(this->m_transform->rotation.x)));
+	this->m_wvp.World *= (XMMatrixRotationY(XMConvertToRadians(this->m_transform->rotation.y)));
+	this->m_wvp.World *= (XMMatrixRotationZ(XMConvertToRadians(this->m_transform->rotation.z)));
+	this->m_wvp.World *= (XMMatrixTranslation(
 		this->m_transform->location.x, 
 		this->m_transform->location.y,
 		this->m_transform->location.z));
 
+	this->m_wvp.World = XMMatrixTranspose(this->m_wvp.World);
+
 	Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
-	this->m_wvp.View = XMMatrixTranspose(XMMatrixIdentity());
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(cameraTransform.rotation.x)));
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(cameraTransform.rotation.y)));
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(cameraTransform.rotation.z)));
-	this->m_wvp.View *= XMMatrixTranspose(XMMatrixTranslation(
-		cameraTransform.location.x, 
-		cameraTransform.location.y, 
-		cameraTransform.location.z));
-	
-	
+	XMVECTOR eye = XMVectorSet(
+		cameraTransform.location.x,
+		cameraTransform.location.y,
+		cameraTransform.location.z,
+		1.0f
+	);
+
+	float pitch = XMConvertToRadians(cameraTransform.rotation.x);
+	float yaw = XMConvertToRadians(cameraTransform.rotation.y);
+
+	XMVECTOR forward = XMVectorSet(
+		cosf(pitch) * sinf(yaw),  
+		-sinf(pitch),            
+		-cosf(pitch) * cosf(yaw),
+		0.0f
+	);
+
+	XMVECTOR at = XMVectorAdd(eye, forward); 
+
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+	this->m_wvp.View = XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up));
+
 	PVOID pData;
 	ThrowIfFailed(this->m_wvpRes->Map(0, nullptr, &pData));
 	memcpy(pData, &this->m_wvp, nWVPSize);
@@ -258,7 +290,7 @@ void Mesh::InitPipeline() {
 	plDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	plDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
-	plDesc.RasterizerState.FrontCounterClockwise = TRUE;
+	plDesc.RasterizerState.FrontCounterClockwise = FALSE;
 	plDesc.RTVFormats[0] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RTVFormats[1] = DXGI_FORMAT_B8G8R8A8_UNORM;
 	plDesc.RTVFormats[2] = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -293,7 +325,7 @@ void Mesh::InitSampler(D3D12* renderer) {
 	UINT nNumORMTextures = this->m_ORMTextures.size();
 	this->m_cbv_srvHeap->Allocate(nNumTextures + nNumORMTextures);
 	UINT nLastIndex = m_cbv_srvHeap->GetLastDescriptorIndex();
-	UINT nFirstIndex = nLastIndex - (nNumTextures + nNumORMTextures);
+	UINT nFirstIndex = nLastIndex - (nNumTextures + nNumORMTextures) + 1;
 
 	UINT nActualIndex = nFirstIndex;
 	for (std::pair<UINT, ComPtr<ID3D12Resource>> resource : this->m_textures) {

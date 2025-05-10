@@ -10,7 +10,6 @@ struct VertexOutput
     float4 position : SV_Position;
     float4 normal : NORMAL0;
     float2 uv : TEXCOORD0;
-    float4 vertexPos : POSITION0;
 };
 
 SamplerState texSampler : register(s0);
@@ -27,8 +26,6 @@ VertexOutput VertexMain(float4 position : POSITION, float4 normal : NORMAL, floa
     
     output.normal = float4(normalize(mul((float3) normal, (float3x3) World)), 0.0f);
     output.uv = uv;
-    output.vertexPos = mul(position, World);
-    
     return output;
 }
 
@@ -37,7 +34,6 @@ struct PixelOutput
     float4 albedo : SV_Target0;
     float4 normal : SV_Target1;
     float4 orm : SV_Target2;
-    float4 position : SV_Target3;
 };
 
 PixelOutput PixelMain(VertexOutput input)
@@ -48,6 +44,5 @@ PixelOutput PixelMain(VertexOutput input)
     output.albedo = tex.Sample(texSampler, uvFlipped);
     output.normal = input.normal * 0.5f + 0.5f;
     output.orm = ormTex.Sample(texSampler, uvFlipped);
-    output.position = input.vertexPos;
     return output;
 }

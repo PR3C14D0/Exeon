@@ -77,7 +77,7 @@ float3 ReconstructPosition(int2 pixelCoord, uint index)
     ndc.y *= -1.0f;
     
     float z = depth * 2.0f - 1.0f;
-    float4 clipPos = float4(ndc.xy, z, 1.0f);
+    float4 clipPos = float4(ndc.xy, depth, 1.0f);
     
     float4 viewPos = mul(InverseProjection, clipPos);
     viewPos /= viewPos.w;
@@ -89,7 +89,7 @@ float3 ReconstructPosition(int2 pixelCoord, uint index)
 
 PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {
-    float3 lightPos = float3(2.f, 2.f, 2.f);
+    float3 lightPos = float3(0.f, 3.f, 0.f);
     float3 lightColor = float3(50.f, 50.f, 50.f);
     
     int2 pixelCoord = int2(input.position.xy);
@@ -130,7 +130,7 @@ PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
     float3 ambient = 0.1f * albedoColor * ao;
 
     float3 color = ambient + Lo;
-
+    
     /* Tonemap */
     color = color / (color + 1.0);
     //color = pow(saturate(color), 1.0 / 2.2);

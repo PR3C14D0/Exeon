@@ -12,4 +12,10 @@ void Camera::Init() {
 
 void Camera::Update() {
 	GameObject::Update();
+	if (this->transform.rotation.x >= 89.f) {
+		this->transform.rotation.x = 89.f;
+	}
+	if (this->transform.rotation.x <= -89.f) {
+		this->transform.rotation.x = -89.f;
+	}
 }

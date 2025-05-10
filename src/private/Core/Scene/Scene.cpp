@@ -2,7 +2,7 @@
 
 Scene::Scene(std::string name) {
 	this->name = name;
-	this->m_go = new GameObject("SampleObject");
+	this->m_go = new GameObject("Sponza Atrium");
 }
 
 void Scene::Init() {

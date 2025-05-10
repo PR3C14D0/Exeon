@@ -184,16 +184,32 @@ void ScreenQuad::InitConstantBuffer() {
 		Camera* currentCamera = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera();
 
 		Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
-		this->m_sqCBuffData.InverseView = XMMatrixTranspose(XMMatrixIdentity());
-		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(currentCamera->transform.rotation.x)));
-		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(currentCamera->transform.rotation.y)));
-		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(currentCamera->transform.rotation.z)));
-		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixTranslation(
-			currentCamera->transform.location.x,
-			currentCamera->transform.location.y,
-			currentCamera->transform.location.z));
+		XMVECTOR eye = XMVectorSet(
+			cameraTransform.location.x,
+			cameraTransform.location.y,
+			cameraTransform.location.z,
+			1.0f
+		);
 
-		this->m_sqCBuffData.InverseProjection = XMMatrixTranspose(XMMatrixPerspectiveFovRH(
+		float pitch = XMConvertToRadians(cameraTransform.rotation.x);
+		float yaw = XMConvertToRadians(cameraTransform.rotation.y);
+
+		XMVECTOR forward = XMVectorSet(
+			cosf(pitch) * sinf(yaw),
+			-sinf(pitch),
+			-cosf(pitch) * cosf(yaw),
+			0.0f
+		);
+
+		XMVECTOR at = XMVectorAdd(eye, forward);
+
+		XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+		this->m_sqCBuffData.InverseView = XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up));
+
+		this->m_sqCBuffData.InverseView = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseView);
+
+		this->m_sqCBuffData.InverseProjection = (XMMatrixPerspectiveFovRH(
 			XMConvertToRadians(70.f), 
 			static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
 			0.01f, 
@@ -225,23 +241,36 @@ void ScreenQuad::UpdateConstantBuffer() {
 		Camera* currentCamera = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera();
 
 		Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
-		this->m_sqCBuffData.InverseView = XMMatrixTranspose(XMMatrixIdentity());
-		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationX(XMConvertToRadians(currentCamera->transform.rotation.x)));
-		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationY(XMConvertToRadians(currentCamera->transform.rotation.y)));
-		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixRotationZ(XMConvertToRadians(currentCamera->transform.rotation.z)));
-		this->m_sqCBuffData.InverseView *= XMMatrixTranspose(XMMatrixTranslation(
-			currentCamera->transform.location.x,
-			currentCamera->transform.location.y,
-			currentCamera->transform.location.z));
-		this->m_sqCBuffData.InverseView =  (XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseView));
+		XMVECTOR eye = XMVectorSet(
+			cameraTransform.location.x,
+			cameraTransform.location.y,
+			cameraTransform.location.z,
+			1.0f
+		);
 
-		this->m_sqCBuffData.InverseProjection = XMMatrixTranspose(XMMatrixPerspectiveFovRH(
+		float pitch = XMConvertToRadians(cameraTransform.rotation.x);
+		float yaw = XMConvertToRadians(cameraTransform.rotation.y);
+
+		XMVECTOR forward = XMVectorSet(
+			cosf(pitch) * sinf(yaw),
+			-sinf(pitch),
+			-cosf(pitch) * cosf(yaw),
+			0.0f
+		);
+
+		XMVECTOR at = XMVectorAdd(eye, forward);
+
+		XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+		this->m_sqCBuffData.InverseView = XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up));
+
+		this->m_sqCBuffData.InverseView = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseView);
+
+		this->m_sqCBuffData.InverseProjection = (XMMatrixPerspectiveFovRH(
 			XMConvertToRadians(70.f),
 			static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
 			0.01f,
 			3000.f));
-		this->m_sqCBuffData.InverseProjection = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseProjection);
-		this->m_sqCBuffData.screenSize = XMFLOAT2(renderer->m_nWidth, renderer->m_nHeight);
 
 
 		this->m_sqCBuffData.cameraPosition = XMFLOAT3(

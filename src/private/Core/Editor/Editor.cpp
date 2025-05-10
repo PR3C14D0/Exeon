@@ -4,9 +4,12 @@ Editor* Editor::m_instance;
 
 Editor::Editor() {
     this->m_bMenuOpen = false;
+    this->m_sceneMgr = nullptr;
 }
 
 void Editor::Init() {
+    this->m_sceneMgr = SceneManager::GetInstance();
+
     ImGuiIO& io = ImGui::GetIO();
 
     ImFontConfig fontCfg = { };
@@ -110,11 +113,26 @@ void Editor::Update() {
         }
         ImGui::EndMenu();
     }
+    if (ImGui::BeginMenu("GameObject")) {
+
+    }
+    if (ImGui::BeginMenu("Build")) {
+
+    }
     ImGui::EndMainMenuBar();
 
-    ImGui::SetNextWindowSize(ImVec2{ 300.f, 600.f });
-    ImGui::Begin("Scene");
-    ImGui::End();
+    if (this->m_sceneMgr) {
+        ImGui::SetNextWindowSize(ImVec2{ 300.f, 600.f });
+        ImGui::Begin("Scene");
+   
+        Scene* scene = this->m_sceneMgr->GetCurrentScene();
+
+        for (std::pair<std::string, GameObject*> object : scene->m_gameObjects) {
+            if(ImGui::Button(object.second->m_name.c_str())) {}
+        }
+
+        ImGui::End();
+    }
 }
 
 Editor* Editor::GetInstance() {

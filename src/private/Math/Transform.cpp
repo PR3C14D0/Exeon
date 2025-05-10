@@ -23,7 +23,7 @@ void Transform::Rotate(float x, float y, float z) {
 }
 
 Vector3 Transform::Forward() {
-	Vector3 v = Vector3(0, 0.f, 1.f);
+	Vector3 v = Vector3(0, 0.f, -1.f);
 	return this->RotatePoint(v);
 }
 

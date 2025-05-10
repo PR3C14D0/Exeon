@@ -9,6 +9,7 @@
 #include "Core/GameObject/Camera/EditorCamera.h"
 
 class Scene {
+	friend class Editor;
 private:
 	GameObject* m_go;
 

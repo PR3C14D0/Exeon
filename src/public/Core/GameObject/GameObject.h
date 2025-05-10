@@ -11,6 +11,7 @@
 
 class GameObject {
 	friend class Scene;
+	friend class Editor;
 private:
 	std::string m_name;
 
