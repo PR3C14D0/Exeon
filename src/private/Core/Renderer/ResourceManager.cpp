@@ -61,6 +61,24 @@ void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::s
 	this->m_resources[texName] = resource;
 }
 
+void ResourceManager::LoadTextureFile(std::string texName, ComPtr<ID3D12Resource>& resource) {
+	if (!this->AddResource(texName, resource)) {
+		resource = this->m_resources[texName];
+		return;
+	}
+
+	LPCWSTR wTexName = MultiByteToUnicode(texName.c_str());
+
+
+	DirectX::ResourceUploadBatch batch(this->m_dev.Get());
+	batch.Begin(D3D12_COMMAND_LIST_TYPE_DIRECT);
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(this->m_dev.Get(), batch, wTexName, resource.GetAddressOf()));
+	D3D12* d3d12 = reinterpret_cast<D3D12*>(this->m_renderer);
+	batch.End(d3d12->m_queue.Get());
+
+	this->m_resources[texName] = resource;
+}
+
 bool ResourceManager::AddResource(std::string resource, ComPtr<ID3D12Resource>& res) {
 	if (ResourceExists(resource)) {
 		spdlog::error("Resource with name {0} already exists. Using the one already uploaded.", resource);

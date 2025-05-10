@@ -1,5 +1,6 @@
 #include "Core/Renderer/ScreenQuad.h"
 #include "Core/Core.h"
+#include "Core/Renderer/ResourceManager.h"
 
 ScreenQuad::ScreenQuad() {
 	this->m_core = Core::GetInstance();
@@ -7,6 +8,7 @@ ScreenQuad::ScreenQuad() {
 	this->m_shader = nullptr;
 	this->m_sceneMgr = SceneManager::GetInstance();
 	this->m_nSqCBuffIndex = -1;
+	this->m_resMgr = ResourceManager::GetInstance();
 }
 
 void ScreenQuad::Init() {
@@ -26,6 +28,48 @@ void ScreenQuad::Init() {
 	
 	if (D3D12* renderer = dynamic_cast<D3D12*>(this->m_renderer)) {
 		this->D3D12Init(renderer);
+	}
+
+}
+
+void ScreenQuad::InitSkyboxTextures(D3D12* renderer) {
+	std::vector<std::string> skyboxTextures = {
+		"sb_back.jpg",
+		"sb_front.jpg",
+		"sb_left.jpg",
+		"sb_right.jpg",
+		"sb_top.jpg",
+		"sb_bottom.jpg"
+	};
+	
+	UINT nTextureCount = skyboxTextures.size();
+
+	UINT nFirstIndex = renderer->m_cbvSrvHeap->GetLastDescriptorIndex() + 1;
+	renderer->m_cbvSrvHeap->Allocate(nTextureCount);
+	UINT nActualIndex = nFirstIndex;
+
+	for (std::string tex : skyboxTextures) {
+		std::string resourceName = std::string("Skybox Texture ") + tex;
+		LPCWSTR wResourceName = MultiByteToUnicode(resourceName.c_str());
+
+		ComPtr<ID3D12Resource> resource;
+		this->m_resMgr->LoadTextureFile(tex, resource);
+		this->m_skyboxTex.push_back(resource);
+
+		resource->SetName(wResourceName);
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = { };
+		srvDesc.Format = resource->GetDesc().Format;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		
+		Descriptor texDesc = renderer->m_cbvSrvHeap->GetDescriptor(nActualIndex);
+
+		this->m_dev->CreateShaderResourceView(resource.Get(), &srvDesc, texDesc.cpuHandle);
+
+		this->m_skyboxIndices.push_back(nActualIndex);
+		nActualIndex++;
 	}
 
 }
@@ -171,6 +215,7 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 
 	ThrowIfFailed(this->m_dev->CreateGraphicsPipelineState(&plDesc, IID_PPV_ARGS(this->m_plState.GetAddressOf())));
 	this->InitConstantBuffer();
+	this->InitSkyboxTextures(renderer);
 }
 
 void ScreenQuad::Render() {

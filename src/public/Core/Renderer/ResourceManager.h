@@ -13,6 +13,9 @@
 #include <DirectXTK/ResourceUploadBatch.h>
 #include <DirectXTK/WICTextureLoader.h>
 #include <map>
+#include <string>
+#include <locale>
+#include <codecvt>
 #include <spdlog/spdlog.h>
 
 using namespace Microsoft::WRL;
@@ -44,5 +47,6 @@ public:
 	bool AddResource(std::string resource, ComPtr<ID3D12Resource>& res);
 
 	void LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::string texName, ComPtr<ID3D12Resource>& resource);
+	void LoadTextureFile(std::string texName, ComPtr<ID3D12Resource>& resource);
 	static ResourceManager* GetInstance();
 };

@@ -89,7 +89,7 @@ float3 ReconstructPosition(int2 pixelCoord, uint index)
 
 PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {
-    float3 lightPos = float3(0.f, 3.f, 0.f);
+    float3 lightPos = float3(0.f, 1.f, 1.f);
     float3 lightColor = float3(50.f, 50.f, 50.f);
     
     int2 pixelCoord = int2(input.position.xy);

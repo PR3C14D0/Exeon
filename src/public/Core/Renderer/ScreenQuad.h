@@ -6,6 +6,7 @@
 #include <DXMath/DirectXMath.h>
 #include <wrl.h>
 #include <vector>
+#include <map>
 #include "Util.h"
 #include "Core/Renderer/Descriptor.h"
 #include "Core/Renderer/Shader.h"
@@ -16,6 +17,7 @@ class Core;
 class Renderer;
 class D3D12;
 class SceneManager;
+class ResourceManager;
 
 
 struct ScreenQuadBuffer {
@@ -59,7 +61,12 @@ private:
 	
 	Shader* m_shader;
 
+	ResourceManager* m_resMgr;
+	std::vector<ComPtr<ID3D12Resource>> m_skyboxTex;
+	std::vector<UINT> m_skyboxIndices;
+
 	void InitConstantBuffer();
+	void InitSkyboxTextures(D3D12* renderer);
 	void UpdateConstantBuffer();
 public:
 	ScreenQuad();
