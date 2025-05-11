@@ -194,8 +194,9 @@ void Mesh::Render() {
 	this->m_list->SetGraphicsRootSignature(this->m_rootSig.Get());
 
 	Descriptor wvpDesc = this->m_cbv_srvHeap->GetDescriptor(this->m_nWvpIndex);
+	Descriptor samplerDesc = dynamic_cast<D3D12*>(this->m_renderer)->m_samplerHeap->GetDescriptor(this->m_nSamplerIndex);
 
-	this->m_list->SetGraphicsRootDescriptorTable(0, this->m_samplerDescriptor.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(0, samplerDesc.gpuHandle);
 	this->m_list->SetGraphicsRootDescriptorTable(3, wvpDesc.gpuHandle);
 
 	int i = 0;
@@ -360,7 +361,7 @@ void Mesh::InitSampler(D3D12* renderer) {
 
 	renderer->m_samplerHeap->Allocate(1);
 	this->m_nSamplerIndex = renderer->m_samplerHeap->GetLastDescriptorIndex();
-	this->m_samplerDescriptor = renderer->m_samplerHeap->GetDescriptor(this->m_nSamplerIndex);
+	Descriptor samplerDescriptor = renderer->m_samplerHeap->GetDescriptor(this->m_nSamplerIndex);
 
 	D3D12_SAMPLER_DESC samplerDesc = { };
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -371,7 +372,7 @@ void Mesh::InitSampler(D3D12* renderer) {
 	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 	samplerDesc.MaxAnisotropy = 1;
 
-	this->m_dev->CreateSampler(&samplerDesc, this->m_samplerDescriptor.cpuHandle);
+	this->m_dev->CreateSampler(&samplerDesc, samplerDescriptor.cpuHandle);
 }
 
 /*

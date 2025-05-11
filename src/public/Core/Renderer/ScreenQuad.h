@@ -27,6 +27,11 @@ struct ScreenQuadBuffer {
 	XMFLOAT2 screenSize;
 };
 
+struct SkyboxBuffer {
+	XMMATRIX View;
+	XMMATRIX Projection;
+};
+
 class ScreenQuad {
 private:
 	Core* m_core;
@@ -58,12 +63,21 @@ private:
 	ComPtr<ID3D12Resource> m_sqCBuffer;
 	ScreenQuadBuffer m_sqCBuffData;
 	UINT m_nSqCBuffIndex;
+
+	ComPtr<ID3D12Resource> m_skyboxBuffer;
+	SkyboxBuffer m_skyboxBuffData;
+	UINT m_nSkyboxBuffIndex;
 	
 	Shader* m_shader;
+	Shader* m_skyboxShader;
 
 	ResourceManager* m_resMgr;
 	std::vector<ComPtr<ID3D12Resource>> m_skyboxTex;
 	std::vector<UINT> m_skyboxIndices;
+	ComPtr<ID3D12RootSignature> m_sbRootSig;
+	ComPtr<ID3D12PipelineState> m_sbPlState;
+	UINT m_nSamplerIndex;
+	Descriptor m_samplerDescriptor;
 
 	void InitConstantBuffer();
 	void InitSkyboxTextures(D3D12* renderer);
