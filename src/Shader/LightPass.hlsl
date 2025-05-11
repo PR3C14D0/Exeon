@@ -103,6 +103,78 @@ float3 ViewDirectionFromUV(float2 uv)
     float2 ndc = uv * 2.0f - 1.0f;
 
     float3 rayView = normalize(mul(float4(-ndc.x, ndc.y, 1.0f, 0.0f), InverseProjection).xyz);
+
+    float3 rayWorld = normalize(mul(float4(rayView, 0.0f), InverseView).xyz);
+
+    return -rayWorld;
+}
+
+
+
+float3 SampleSkybox(float3 dir)
+{
+    float3 absDir = abs(dir);
+    float ma;
+    float2 uv;
+    float3 color;
+
+    if (absDir.x >= absDir.y && absDir.x >= absDir.z)
+    {
+        ma = absDir.x;
+        if (dir.x > 0)
+        {
+            // Right face (+X)
+            uv = float2(-dir.z, -dir.y) / ma * 0.5 + 0.5;
+            color = rightTex.Sample(skyboxSampler, uv).rgb;
+        }
+        else
+        {
+            // Left face (-X)
+            uv = float2(dir.z, -dir.y) / ma * 0.5 + 0.5;
+            color = leftTex.Sample(skyboxSampler, uv).rgb;
+        }
+    }
+    else if (absDir.y >= absDir.x && absDir.y >= absDir.z)
+    {
+        ma = absDir.y;
+        if (dir.y > 0)
+        {
+            // Top face (+Y)
+            uv = float2(dir.x, dir.z) / ma * 0.5 + 0.5;
+            color = topTex.Sample(skyboxSampler, uv).rgb;
+        }
+        else
+        {
+            // Bottom face (-Y)
+            uv = float2(dir.x, -dir.z) / ma * 0.5 + 0.5;
+            color = bottomTex.Sample(skyboxSampler, uv).rgb;
+        }
+    }
+    else
+    {
+        ma = absDir.z;
+        if (dir.z > 0)
+        {
+            // Front face (+Z)
+            uv = float2(dir.x, -dir.y) / ma * 0.5 + 0.5;
+            color = frontTex.Sample(skyboxSampler, uv).rgb;
+        }
+        else
+        {
+            // Back face (-Z)
+            uv = float2(-dir.x, -dir.y) / ma * 0.5 + 0.5;
+            color = backTex.Sample(skyboxSampler, uv).rgb;
+        }
+    }
+
+    return color;
+}
+
+float3 ViewDirectionFromUV(float2 uv)
+{
+    float2 ndc = uv * 2.0f - 1.0f;
+
+    float3 rayView = normalize(mul(float4(-ndc.x, ndc.y, 1.0f, 0.0f), InverseProjection).xyz);
     float3 rayWorld = normalize(mul(float4(rayView, 0.0f), InverseView).xyz);
 
     return -rayWorld;
