@@ -17,7 +17,7 @@ void EditorCamera::Update() {
 	if(this->m_input->GetButtonDown(MOUSE_BUTTON::RIGHT)) {
 		this->m_input->ShowCursor(false);
 		
-		this->transform.Rotate(this->m_input->deltaY * -1 * this->m_fSensY * this->m_time->deltaTime, this->m_input->deltaX * this->m_fSensX * this->m_time->deltaTime, 0.f);
+		this->transform.Rotate(this->m_input->deltaY * this->m_fSensY * -1 * this->m_time->deltaTime, this->m_input->deltaX * this->m_fSensX * this->m_time->deltaTime, 0.f);
 
 		if (this->m_input->GetKeyDown('w')) {
 			this->transform.Translate(this->transform.Forward() * this->m_fSpeed * this->m_time->deltaTime);

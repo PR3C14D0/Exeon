@@ -34,12 +34,12 @@ void ScreenQuad::Init() {
 
 void ScreenQuad::InitSkyboxTextures(D3D12* renderer) {
 	std::vector<std::string> skyboxTextures = {
-		"sb_front.jpg",
-		"sb_back.jpg",
-		"sb_left.jpg",
-		"sb_right.jpg",
-		"sb_top.jpg",
-		"sb_bottom.jpg"
+		"sb_front.bmp",
+		"sb_back.bmp",
+		"sb_left.bmp",
+		"sb_right.bmp",
+		"sb_top.bmp",
+		"sb_bottom.bmp"
 	};
 	
 	UINT nTextureCount = skyboxTextures.size();
@@ -308,11 +308,13 @@ void ScreenQuad::InitConstantBuffer() {
 
 		this->m_sqCBuffData.InverseView = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseView);
 
-		this->m_sqCBuffData.InverseProjection = (XMMatrixPerspectiveFovRH(
+		this->m_sqCBuffData.InverseProjection = (XMMatrixPerspectiveFovLH(
 			XMConvertToRadians(70.f), 
 			static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
-			0.01f, 
+			0.001f, 
 			3000.f));
+
+		this->m_sqCBuffData.InverseProjection = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseProjection);
 
 
 		this->m_sqCBuffData.cameraPosition = XMFLOAT3(
@@ -367,11 +369,13 @@ void ScreenQuad::UpdateConstantBuffer() {
 
 		this->m_sqCBuffData.InverseView = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseView);
 
-		this->m_sqCBuffData.InverseProjection = (XMMatrixPerspectiveFovRH(
+		this->m_sqCBuffData.InverseProjection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(
 			XMConvertToRadians(70.f),
 			static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
-			0.01f,
+			0.001f,
 			3000.f));
+
+		this->m_sqCBuffData.InverseProjection = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseProjection);
 
 
 		this->m_sqCBuffData.cameraPosition = XMFLOAT3(
@@ -390,13 +394,6 @@ void ScreenQuad::UpdateConstantBuffer() {
 }
 
 void ScreenQuad::D3D12Render(D3D12* renderer) {
-	/*
-	frontParam,
-		backParam,
-		leftParam,
-		rightParam,
-		topParam,
-		bottomParam,*/
 	this->UpdateConstantBuffer();
 	Descriptor albedoDesc = renderer->m_cbvSrvHeap->GetDescriptor(0);
 	Descriptor normalDesc = renderer->m_cbvSrvHeap->GetDescriptor(1);

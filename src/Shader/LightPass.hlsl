@@ -171,19 +171,19 @@ float3 SampleSkybox(float3 dir)
 
 PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {
-    float depth = depthTex.Load(input.position.xy, index).r;
-    if (depth >= 1.0f - 1e-5)
-    {
-        float3 dir = ViewDirectionFromUV(input.uv);
-        float3 skyColor = SampleSkybox(dir);
+    //float depth = depthTex.Load(input.position.xy, index).r;
+    //if (depth >= 1.0f - 1e-5)
+    //{
+    //    float3 dir = ViewDirectionFromUV(input.uv);
+    //    float3 skyColor = SampleSkybox(dir);
 
-        PixelOutput outSky;
-        outSky.screen = float4(skyColor, 1.0f);
-        return outSky;
-    }
+    //    PixelOutput outSky;
+    //    outSky.screen = float4(skyColor, 1.0f);
+    //    return outSky;
+    //}
     
-    float3 lightPos = float3(0.f, 1.f, 1.f);
-    float3 lightColor = float3(50.f, 50.f, 50.f);
+    float3 lightPos = float3(0.f, 1.f, -2.f);
+    float3 lightColor = float3(100.f, 100.f, 100.f);
     
     int2 pixelCoord = int2(input.position.xy);
 

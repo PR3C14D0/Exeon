@@ -151,6 +151,7 @@ void Mesh::UpdateConstantBuffer() {
 	this->m_wvp.World = XMMatrixTranspose(this->m_wvp.World);
 
 	Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
+
 	XMVECTOR eye = XMVectorSet(
 		cameraTransform.location.x,
 		cameraTransform.location.y,
@@ -162,13 +163,13 @@ void Mesh::UpdateConstantBuffer() {
 	float yaw = XMConvertToRadians(cameraTransform.rotation.y);
 
 	XMVECTOR forward = XMVectorSet(
-		cosf(pitch) * sinf(yaw),  
-		-sinf(pitch),            
+		cosf(pitch) * sinf(yaw),
+		-sinf(pitch),
 		-cosf(pitch) * cosf(yaw),
 		0.0f
 	);
 
-	XMVECTOR at = XMVectorAdd(eye, forward); 
+	XMVECTOR at = XMVectorAdd(eye, forward);
 
 	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
