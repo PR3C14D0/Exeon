@@ -14,7 +14,7 @@ void Editor::Init() {
 
     ImFontConfig fontCfg = { };
     fontCfg.FontDataOwnedByAtlas = false;
-    io.Fonts->AddFontFromMemoryTTF(Roboto, nRobotoSize, 16.f, &fontCfg);
+    io.Fonts->AddFontFromMemoryTTF(Roboto, nRobotoSize, 20.f, &fontCfg);
 
     /*
         https://github.com/ocornut/imgui/issues/707#issuecomment-2732535348
