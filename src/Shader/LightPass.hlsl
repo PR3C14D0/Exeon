@@ -99,89 +99,16 @@ float3 ReconstructPosition(int2 pixelCoord, uint index)
 }
 
 float3 ViewDirectionFromUV(float2 uv)
-{
-    float2 ndc = uv * 2.0f - 1.0f;
+{ 
+    float2 uvOffset = uv * 2.0f - 1.0f;
+    uvOffset.y *= -1.0f;
 
-    float3 rayView = normalize(mul(float4(-ndc.x, ndc.y, 1.0f, 0.0f), InverseProjection).xyz);
-
-    float3 rayWorld = normalize(mul(float4(rayView, 0.0f), InverseView).xyz);
-
-    return -rayWorld;
-}
-
-
-float3 SampleSkybox(float3 dir)
-{
-    float3 absDir = abs(dir);
-    float ma;
-    float2 uv;
-    float3 color;
-
-    if (absDir.x >= absDir.y && absDir.x >= absDir.z)
-    {
-        ma = absDir.x;
-        if (dir.x > 0)
-        {
-            // Right face (+X)
-            uv = float2(-dir.z, -dir.y) / ma * 0.5 + 0.5;
-            color = rightTex.Sample(skyboxSampler, uv).rgb;
-        }
-        else
-        {
-            // Left face (-X)
-            uv = float2(dir.z, -dir.y) / ma * 0.5 + 0.5;
-            color = leftTex.Sample(skyboxSampler, uv).rgb;
-        }
-    }
-    else if (absDir.y >= absDir.x && absDir.y >= absDir.z)
-    {
-        ma = absDir.y;
-        if (dir.y > 0)
-        {
-            // Top face (+Y)
-            uv = float2(dir.x, dir.z) / ma * 0.5 + 0.5;
-            color = topTex.Sample(skyboxSampler, uv).rgb;
-        }
-        else
-        {
-            // Bottom face (-Y)
-            uv = float2(dir.x, -dir.z) / ma * 0.5 + 0.5;
-            color = bottomTex.Sample(skyboxSampler, uv).rgb;
-        }
-    }
-    else
-    {
-        ma = absDir.z;
-        if (dir.z > 0)
-        {
-            // Front face (+Z)
-            uv = float2(dir.x, -dir.y) / ma * 0.5 + 0.5;
-            color = frontTex.Sample(skyboxSampler, uv).rgb;
-        }
-        else
-        {
-            // Back face (-Z)
-            uv = float2(-dir.x, -dir.y) / ma * 0.5 + 0.5;
-            color = backTex.Sample(skyboxSampler, uv).rgb;
-        }
-    }
-
-    return color;
+    float3 dir = float3(uvOffset.x, uvOffset.y, 1.0f);
+    return normalize(dir);
 }
 
 PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
-{
-    //float depth = depthTex.Load(input.position.xy, index).r;
-    //if (depth >= 1.0f - 1e-5)
-    //{
-    //    float3 dir = ViewDirectionFromUV(input.uv);
-    //    float3 skyColor = SampleSkybox(dir);
-
-    //    PixelOutput outSky;
-    //    outSky.screen = float4(skyColor, 1.0f);
-    //    return outSky;
-    //}
-    
+{   
     float3 lightPos = float3(0.f, 1.f, -2.f);
     float3 lightColor = float3(100.f, 100.f, 100.f);
     

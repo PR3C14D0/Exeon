@@ -28,11 +28,18 @@ file(GLOB "IMGUI_SRC"
 	"${PUBLIC_INCLUDE}/imgui/*.h"
 )
 
+file(GLOB "IMGUIZMO_SRC" 
+	"${PUBLIC_INCLUDE}/ImGuizmo/*.cpp"
+	"${PUBLIC_INCLUDE}/ImGuizmo/*.h"
+)
+
 add_library("ImGUI" STATIC ${IMGUI_SRC})
+add_library("ImGuizmo" STATIC ${IMGUIZMO_SRC})
 
 target_link_libraries(Exeon "d3d12.lib;dxgi.lib;d3dcompiler.lib")
 target_link_libraries(Exeon "${LIB}/assimp-vc143-mt.lib;${LIB}/DirectXTK12.lib;${LIB}/spdlogd.lib")
 target_link_libraries(Exeon ImGUI)
+target_link_libraries(Exeon ImGuizmo)
 
 target_include_directories(Exeon PRIVATE "${PRIVATE_INCLUDE}")
-target_include_directories(Exeon PUBLIC "${PUBLIC_INCLUDE}")
+include_directories("${PUBLIC_INCLUDE}")

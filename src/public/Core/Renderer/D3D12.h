@@ -12,6 +12,7 @@
 #include <imgui/imgui_impl_dx12.h>
 #include <imgui/imgui_impl_win32.h>
 #include "Core/Editor/Editor.h"
+#include <ImGuizmo/ImGuizmo.h>
 
 using namespace Microsoft::WRL;
 

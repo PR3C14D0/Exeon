@@ -179,7 +179,7 @@ void D3D12::Init(HWND hwnd) {
 
 	ImGui::StyleColorsDark();
 
-	this->m_editor->Init();
+	this->m_editor->Init(this->m_nWidth, this->m_nHeight);
 }
 
 void D3D12::InitDepth() {
@@ -311,6 +311,16 @@ void D3D12::Update() {
 	ImGui_ImplWin32_NewFrame();
 	ImGui_ImplDX12_NewFrame();
 	ImGui::NewFrame();
+	ImGuizmo::BeginFrame();
+
+	ImGuizmo::BeginFrame();
+	ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
+	ImGuizmo::SetRect(0, 0, this->m_nWidth, this->m_nHeight);
+
+	// Establecer el área donde se dibujará el guizmo en la ventana
+	ImGuizmo::SetRect(0.0f, 0.0f, static_cast<float>(this->m_nWidth), static_cast<float>(this->m_nHeight));
+
+
 
 	this->m_editor->Update();
 
