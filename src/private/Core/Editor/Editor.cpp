@@ -128,114 +128,89 @@ void Editor::Update() {
     ImGui::EndMainMenuBar();
 
     if (this->m_sceneMgr) {
-
-        float identityMatrix[16] = {
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f  // Posición del cubo (X=1.0f, Y=1.0f, Z=0.0f)
-        };
-
-        ImGuizmo::Enable(true);
-
-        ImGui::SetNextWindowSize(ImVec2{ 300.f, 600.f });
-        ImGui::Begin("Scene");
-   
         Scene* scene = this->m_sceneMgr->GetCurrentScene();
         Camera* camera = scene->GetCurrentCamera();
-
         Transform cameraTransform = camera->transform;
 
-        XMVECTOR eye = XMVectorSet(
-            cameraTransform.location.x,
-            cameraTransform.location.y,
-            cameraTransform.location.z,
-            1.0f
-        );
-
+        XMVECTOR eye = XMVectorSet(cameraTransform.location.x, cameraTransform.location.y, cameraTransform.location.z, 1.0f);
         float pitch = XMConvertToRadians(cameraTransform.rotation.x);
         float yaw = XMConvertToRadians(cameraTransform.rotation.y);
-
-        XMVECTOR forward = XMVectorSet(
-            cosf(pitch) * sinf(yaw),
-            -sinf(pitch),
-            -cosf(pitch) * cosf(yaw),
-            0.0f
-        );
-
+        XMVECTOR forward = XMVectorSet(cosf(pitch) * sinf(yaw), -sinf(pitch), -cosf(pitch) * cosf(yaw), 0.0f);
         XMVECTOR at = XMVectorAdd(eye, forward);
-
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
-        this->m_wvp.View = (XMMatrixLookAtLH(eye, at, up));
-        this->m_wvp.World = (XMMatrixIdentity());
-        this->m_wvp.Projection = (XMMatrixPerspectiveFovLH(XMConvertToRadians(70.f), static_cast<float>(this->m_nWidth) / static_cast<float>(this->m_nHeight), 0.01f, 3000.f));
+        this->m_wvp.View = XMMatrixLookAtLH(eye, at, up);
+        this->m_wvp.Projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(70.f), static_cast<float>(this->m_nWidth) / this->m_nHeight, 0.01f, 3000.f);
 
-        /* Convert our View Projection matrices to a length 16 array of floats */
         float viewMatrix[16];
         float projectionMatrix[16];
         XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(viewMatrix), this->m_wvp.View);
         XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(projectionMatrix), this->m_wvp.Projection);
 
-        ImGuizmo::DrawGrid(viewMatrix, projectionMatrix, identityMatrix, 100);
+        ImGuizmo::Enable(true);
+        ImGui::SetNextWindowSize(ImVec2{ 300.f, 600.f });
+        ImGui::Begin("Scene");
 
-        float worldMatrix[16];
-
-        float objectMatrix[16] = {
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f, 1.0f  // Posición del cubo (X=1.0f, Y=1.0f, Z=0.0f)
-        };
-
-        for (std::pair<std::string, GameObject*> object : scene->m_gameObjects) {
-            if(ImGui::Button(object.second->m_name.c_str())) {
-                this->m_inspectorObj = object.second;
+        for (const auto& [name, object] : scene->m_gameObjects) {
+            if (ImGui::Button(name.c_str())) {
+                this->m_inspectorObj = object;
             }
         }
 
+        ImGui::End();
+
         ImGui::SetNextWindowSize(ImVec2{ 300.f, 600.f });
-        ImGui::SetNextWindowPos(ImVec2{ 1575,180 });
+        ImGui::SetNextWindowPos(ImVec2{ 1575, 180 });
         ImGui::Begin("Inspector");
+
         if (this->m_inspectorObj) {
-            Transform* pObjTransform = &this->m_inspectorObj->transform;
-           
-            this->m_wvp.World *= (XMMatrixRotationX(XMConvertToRadians(pObjTransform->rotation.x)));
-            this->m_wvp.World *= (XMMatrixRotationY(XMConvertToRadians(pObjTransform->rotation.y)));
-            this->m_wvp.World *= (XMMatrixRotationZ(XMConvertToRadians(pObjTransform->rotation.z)));
-            this->m_wvp.World *= (XMMatrixTranslation(
-                pObjTransform->location.x,
-                pObjTransform->location.y,
-                pObjTransform->location.z));
+            Transform* transform = &this->m_inspectorObj->transform;
 
-            this->m_wvp.World = XMMatrixTranspose(this->m_wvp.World);
-            XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(worldMatrix), this->m_wvp.World);
+            XMMATRIX worldMatrixXM = XMMatrixScaling(transform->scale.x, transform->scale.y, transform->scale.z) *
+                XMMatrixRotationX(XMConvertToRadians(transform->rotation.x)) *
+                XMMatrixRotationY(XMConvertToRadians(transform->rotation.y)) *
+                XMMatrixRotationZ(XMConvertToRadians(transform->rotation.z)) *
+                XMMatrixTranslation(transform->location.x, transform->location.y, transform->location.z);
 
-            ImGuizmo::Manipulate(viewMatrix, projectionMatrix, ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::WORLD, worldMatrix);
+            float worldMatrix[16];
+            XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(worldMatrix), worldMatrixXM);
+
+            ImGuizmo::Manipulate(viewMatrix, projectionMatrix, ImGuizmo::TRANSLATE, ImGuizmo::WORLD, worldMatrix);
+
+            if (ImGuizmo::IsUsing()) {
+                float loc[3], rot[3], scale[3];
+                ImGuizmo::DecomposeMatrixToComponents(worldMatrix, loc, rot, scale);
+                transform->location = Vector3{ loc[0], loc[1], loc[2] };
+                transform->rotation = Vector3{ rot[0], rot[1], rot[2] };
+                transform->scale = Vector3{ scale[0], scale[1], scale[2] };
+            }
 
             ImGui::Text(this->m_inspectorObj->m_name.c_str());
+
             ImGui::Text("Location");
             ImGui::PushItemWidth(100);
+            ImGui::InputFloat("Loc X", &transform->location.x, 0.1f, 1.f, "%.2f");
+            ImGui::InputFloat("Loc Y", &transform->location.y, 0.1f, 1.f, "%.2f");
+            ImGui::InputFloat("Loc Z", &transform->location.z, 0.1f, 1.f, "%.2f");
 
-            ImGui::InputFloat("##X", &pObjTransform->location.x, 0.1f, 1.f, "%.2f");
-            ImGui::InputFloat("##Y", &pObjTransform->location.y, 0.1f, 1.f, "%.2f");
-            ImGui::InputFloat("##Z", &pObjTransform->location.z, 0.1f, 1.f, "%.2f");
-            ImGui::PopItemWidth();
             ImGui::Text("Rotation");
-            ImGui::PushItemWidth(100);
-
-            ImGui::InputFloat("##X", &pObjTransform->rotation.x, 5.f, 10.f, "%.2f");
-            ImGui::InputFloat("##Y", &pObjTransform->rotation.y, 5.f, 10.f, "%.2f");
-            ImGui::InputFloat("##Z", &pObjTransform->rotation.z, 5.f, 10.f, "%.2f");
+            ImGui::InputFloat("Rot X", &transform->rotation.x, 5.f, 10.f, "%.2f");
+            ImGui::InputFloat("Rot Y", &transform->rotation.y, 5.f, 10.f, "%.2f");
+            ImGui::InputFloat("Rot Z", &transform->rotation.z, 5.f, 10.f, "%.2f");
             ImGui::PopItemWidth();
+
+            ImGui::Text("Components");
+            for (Component* component : this->m_inspectorObj->m_components) {
+                ImGui::Button(component->m_name.c_str());
+            }
         }
         else {
             ImGui::Text("Select an object...");
         }
-        ImGui::End();
 
         ImGui::End();
     }
+
 }
 
 Editor* Editor::GetInstance() {

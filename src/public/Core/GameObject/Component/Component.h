@@ -3,6 +3,7 @@
 #include <iostream>
 
 class Component {
+	friend class Editor;
 protected:
 	std::string m_name;
 public:
