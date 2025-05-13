@@ -98,17 +98,73 @@ float3 ReconstructPosition(int2 pixelCoord, uint index)
     return worldPos.xyz;
 }
 
+// Función para obtener la dirección del rayo en el espacio mundial
 float3 ViewDirectionFromUV(float2 uv)
-{ 
-    float2 uvOffset = uv * 2.0f - 1.0f;
-    uvOffset.y *= -1.0f;
+{
+    float2 ndc = uv * 2.0f - 1.0f;
 
-    float3 dir = float3(uvOffset.x, uvOffset.y, 1.0f);
-    return normalize(dir);
+    float3 rayView = normalize(mul(float4(-ndc.x, ndc.y, 1.0f, 0.0f), InverseProjection).xyz);
+
+    float3 rayWorld = normalize(mul(float4(rayView, 0.0f), InverseView).xyz);
+
+    return rayWorld;
+}
+
+float GridMask(float3 worldPos, float scale)
+{
+    // Proyectar las coordenadas del mundo sobre el plano XZ
+    float2 gridUV = worldPos.xz * scale;
+
+    // Obtener las fracciones de la posición en la cuadrícula
+    float2 grid = abs(frac(gridUV) - 0.5f);
+
+    // Calcular la distancia a la línea más cercana
+    float lineDist = min(grid.x, grid.y);
+    
+    // Suavizar las líneas usando fwidth para obtener bordes suaves
+    float width = max(fwidth(lineDist), 1e-5); // evitar división por cero
+
+    // Retornar la máscara suavizada para las líneas de la cuadrícula
+    return 1.0f - smoothstep(0.0f, width * 0.5f, lineDist); // Ajuste para hacer las líneas más visibles
 }
 
 PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {   
+    float depth = depthTex.Load(input.position.xy, index).r;
+    float3 color = float3(0.f, 0.f, 0.f);
+    //if (depth >= 1.f)
+    //{
+    //    // Obtener las coordenadas UV del píxel
+    //    float2 uv = input.position.xy;
+
+    //    // Calcular la dirección del rayo desde la cámara usando las UVs
+    //    float3 rayDirection = ViewDirectionFromUV(uv);
+
+    //    // Elegir un plano para intersectar con el rayo (por ejemplo, el plano Z = 0)
+    //    float t = -cameraPos.z / rayDirection.z; // Intersección con el plano Z = 0
+
+    //    // Obtener las coordenadas en el mundo para el punto de intersección
+    //    float3 worldPos = cameraPos + t * rayDirection;
+
+    //    // Ajustar la escala de la cuadrícula (puedes modificar esta escala)
+    //    float scale = 10.0f; // Ajusta la escala de la cuadrícula
+
+    //    // Obtener la máscara de la cuadrícula
+    //    float gridMaskValue = GridMask(worldPos, scale);
+
+    //    // Asignar el color de la cuadrícula (blanco para las líneas)
+    //    color = float3(gridMaskValue, gridMaskValue, gridMaskValue);
+
+    //    // Crear la salida del píxel para la cuadrícula
+    //    PixelOutput gridOut;
+    //    gridOut.screen = float4(color.x, color.y, color.z, 1.f);
+        
+    //    // Retornar el color de la cuadrícula
+    //    return gridOut;
+    //}
+
+
+    
     float3 lightPos = float3(0.f, 1.f, -2.f);
     float3 lightColor = float3(100.f, 100.f, 100.f);
     
@@ -149,7 +205,7 @@ PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 
     float3 ambient = 0.1f * albedoColor * ao;
 
-    float3 color = ambient + Lo;
+    color = ambient + Lo;
     
     /* Tonemap */
     color = color / (color + 1.0);

@@ -27,6 +27,7 @@ Mesh::Mesh(std::string name, Transform* parentTransform) : Component::Component(
 	this->m_core->GetWindowSize(nWidth, nHeight);
 
 	this->m_wvp.World = (XMMatrixIdentity() * XMMatrixTranslation(this->m_transform->location.x, this->m_transform->location.y, this->m_transform->location.z));
+	this->m_wvp.World *= (XMMatrixScaling(this->m_transform->scale.x, this->m_transform->scale.y, this->m_transform->scale.z));
 	this->m_wvp.World *= (XMMatrixRotationX(XMConvertToRadians(this->m_transform->rotation.x)));
 	this->m_wvp.World *= (XMMatrixRotationY(XMConvertToRadians(this->m_transform->rotation.y)));
 	this->m_wvp.World *= (XMMatrixRotationZ(XMConvertToRadians(this->m_transform->rotation.z)));
@@ -140,6 +141,7 @@ void Mesh::UpdateConstantBuffer() {
 	UINT nWVPSize = (sizeof(this->m_wvp) + 255) & ~255;
 	this->m_wvp.World = (XMMatrixIdentity());
 
+	this->m_wvp.World *= (XMMatrixScaling(this->m_transform->scale.x, this->m_transform->scale.y, this->m_transform->scale.z));
 	this->m_wvp.World *= (XMMatrixRotationX(XMConvertToRadians(this->m_transform->rotation.x)));
 	this->m_wvp.World *= (XMMatrixRotationY(XMConvertToRadians(this->m_transform->rotation.y)));
 	this->m_wvp.World *= (XMMatrixRotationZ(XMConvertToRadians(this->m_transform->rotation.z)));

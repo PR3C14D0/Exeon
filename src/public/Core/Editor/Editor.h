@@ -18,6 +18,11 @@ private:
 	UINT m_nHeight;
 
 	WVP m_wvp;
+
+	bool m_bLocation;
+	bool m_bRotation;
+	bool m_bScale;
+	ImGuizmo::OPERATION m_guizmoOp;
 public:
 	Editor();
 	void Init(UINT nWidth, UINT nHeight);

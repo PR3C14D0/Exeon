@@ -19,7 +19,7 @@ void Scene::Init() {
 	for (std::pair<std::string, GameObject*> object : this->m_gameObjects) {
 		object.second->Init();
 	}
-	//m_go->transform.Rotate(Vector3(90.f, 0.f, 0.f));
+	m_go->transform.Rotate(Vector3(90.f, 0.f, 0.f));
 }
 
 void Scene::Update() {

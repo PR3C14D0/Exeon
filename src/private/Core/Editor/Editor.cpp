@@ -8,6 +8,11 @@ Editor::Editor() {
     this->m_inspectorObj = nullptr;
     this->m_nWidth = 0;
     this->m_nHeight = 0;
+
+    this->m_bLocation = true;
+    this->m_bRotation = false;
+    this->m_bScale = false;
+    this->m_guizmoOp = ImGuizmo::OPERATION::TRANSLATE;
 }
 
 void Editor::Init(UINT nWidth, UINT nHeight) {
@@ -164,28 +169,55 @@ void Editor::Update() {
         ImGui::Begin("Inspector");
 
         if (this->m_inspectorObj) {
+            ImGui::Text(this->m_inspectorObj->m_name.c_str());
+            ImGui::Text("Mode");
+            if (ImGui::RadioButton("Location", this->m_bLocation)) {
+                this->m_bLocation = true;
+                this->m_bRotation = false;
+                this->m_bScale = false;
+                this->m_guizmoOp = ImGuizmo::OPERATION::TRANSLATE;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Rotation", this->m_bRotation)) {
+                this->m_bLocation = false;
+                this->m_bRotation = true;
+                this->m_bScale = false;
+                this->m_guizmoOp = ImGuizmo::OPERATION::ROTATE;
+            }
+            ImGui::SameLine();
+            if (ImGui::RadioButton("Scale", this->m_bScale)) {
+                this->m_bLocation = false;
+                this->m_bRotation = false;
+                this->m_bScale = true;
+                this->m_guizmoOp = ImGuizmo::OPERATION::SCALE;
+            }
+
             Transform* transform = &this->m_inspectorObj->transform;
 
-            XMMATRIX worldMatrixXM = XMMatrixScaling(transform->scale.x, transform->scale.y, transform->scale.z) *
-                XMMatrixRotationX(XMConvertToRadians(transform->rotation.x)) *
-                XMMatrixRotationY(XMConvertToRadians(transform->rotation.y)) *
-                XMMatrixRotationZ(XMConvertToRadians(transform->rotation.z)) *
-                XMMatrixTranslation(transform->location.x, transform->location.y, transform->location.z);
+            XMMATRIX scaleMat = XMMatrixScaling(transform->scale.x, transform->scale.y, transform->scale.z);
+            XMMATRIX rotMat = XMMatrixRotationRollPitchYaw(
+                XMConvertToRadians(transform->rotation.x),
+                XMConvertToRadians(transform->rotation.y),
+                XMConvertToRadians(transform->rotation.z)
+            );
+            XMMATRIX transMat = XMMatrixTranslation(transform->location.x, transform->location.y, transform->location.z);
+
+            XMMATRIX worldMatrixXM = scaleMat * rotMat * transMat;
 
             float worldMatrix[16];
             XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(worldMatrix), worldMatrixXM);
 
-            ImGuizmo::Manipulate(viewMatrix, projectionMatrix, ImGuizmo::TRANSLATE, ImGuizmo::WORLD, worldMatrix);
+            ImGuizmo::Manipulate(viewMatrix, projectionMatrix, this->m_guizmoOp, ImGuizmo::WORLD, worldMatrix);
 
             if (ImGuizmo::IsUsing()) {
                 float loc[3], rot[3], scale[3];
                 ImGuizmo::DecomposeMatrixToComponents(worldMatrix, loc, rot, scale);
+                
                 transform->location = Vector3{ loc[0], loc[1], loc[2] };
-                transform->rotation = Vector3{ rot[0], rot[1], rot[2] };
+                transform->rotation = Vector3{ rot[0], rot[1], rot[2]};
                 transform->scale = Vector3{ scale[0], scale[1], scale[2] };
             }
 
-            ImGui::Text(this->m_inspectorObj->m_name.c_str());
 
             ImGui::Text("Location");
             ImGui::PushItemWidth(100);

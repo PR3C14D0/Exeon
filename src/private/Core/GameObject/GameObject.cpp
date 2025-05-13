@@ -4,6 +4,8 @@ GameObject::GameObject(std::string name) {
 	this->m_name = name;
 	this->m_input = Input::GetInstance();
 	this->m_time = Time::GetInstance();
+	this->transform = Transform();
+	this->transform.scale = Vector3(1.f, 1.f, 1.f);
 }
 
 void GameObject::Init() {
