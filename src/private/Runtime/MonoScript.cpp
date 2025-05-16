@@ -37,6 +37,13 @@ void MonoScript::Init() {
 	this->m_image = mono_assembly_get_image(this->m_asm);
 
 	MonoClass* gameScriptClass = mono_class_from_name(this->m_image, "", "GameScript");
+	MonoMethod* initMethod = mono_class_get_method_from_name(gameScriptClass, "Init", 0);
+	if(!initMethod) {
+		spdlog::error("Error calling Init Method");
+		return;
+	}
+
+	mono_runtime_invoke(initMethod, nullptr, nullptr, nullptr);
 }
 
 void MonoScript::Update() {
