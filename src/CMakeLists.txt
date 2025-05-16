@@ -37,7 +37,7 @@ add_library("ImGUI" STATIC ${IMGUI_SRC})
 add_library("ImGuizmo" STATIC ${IMGUIZMO_SRC})
 
 target_link_libraries(Exeon "d3d12.lib;dxgi.lib;d3dcompiler.lib")
-target_link_libraries(Exeon "${LIB}/assimp-vc143-mt.lib;${LIB}/DirectXTK12.lib;${LIB}/spdlogd.lib")
+target_link_libraries(Exeon "${LIB}/assimp-vc143-mt.lib;${LIB}/DirectXTK12.lib;${LIB}/spdlogd.lib;${LIB}/mono-2.0-sgen.lib")
 target_link_libraries(Exeon ImGUI)
 target_link_libraries(Exeon ImGuizmo)
 

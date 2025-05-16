@@ -7,6 +7,7 @@ Core::Core() {
 	this->m_renderer = nullptr;
 	this->m_sceneManager = SceneManager::GetInstance();
 	this->m_resMgr = nullptr;
+	this->m_mono = nullptr;
 }
 
 void Core::Init() {
@@ -20,6 +21,9 @@ void Core::Init() {
 	m_renderer->Init(this->m_hwnd);
 	this->m_resMgr = ResourceManager::GetInstance();
 	this->m_resMgr->Init();
+
+	this->m_mono = MonoScript::GetInstance();
+	this->m_mono->Init();
 }
 
 void Core::SetHWND(HWND& hwnd) {

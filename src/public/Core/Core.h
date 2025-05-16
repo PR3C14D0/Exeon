@@ -5,6 +5,7 @@
 #include "Core/Renderer/D3D12.h"
 #include "Scene/SceneManager.h"
 #include "Renderer/ResourceManager.h"
+#include "Runtime/MonoScript.h"
 
 class Core {
 private:
@@ -19,6 +20,8 @@ private:
 
 	UINT m_nWidth;
 	UINT m_nHeight;
+
+	MonoScript* m_mono;
 public:
 	Core();
 	void Init();
