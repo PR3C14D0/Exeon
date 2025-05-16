@@ -1,9 +1,12 @@
 using System;
 
-public class ExeonScript
+namespace Exeon
 {
-    public static void Init()
+    public class ExeonScript
     {
-        Console.WriteLine("Hello from C#!");
+        public static void Init()
+        {
+            Console.WriteLine("Debug");
+        }
     }
 }

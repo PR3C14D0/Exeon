@@ -9,7 +9,7 @@ MonoScript::MonoScript() {
 	this->m_domain = nullptr;
 	this->m_asm = nullptr;
 	this->m_image = nullptr;
-	this->m_filename = "GameScripts.dll";
+	this->m_filename = "Managed/ExeonScript.dll";
 }
 
 void MonoScript::Init() {
@@ -36,7 +36,7 @@ void MonoScript::Init() {
 
 	this->m_image = mono_assembly_get_image(this->m_asm);
 
-	MonoClass* gameScriptClass = mono_class_from_name(this->m_image, "", "ExeonScript");
+	MonoClass* gameScriptClass = mono_class_from_name(this->m_image, "Exeon", "ExeonScript");
 	MonoMethod* initMethod = mono_class_get_method_from_name(gameScriptClass, "Init", 0);
 	if(!initMethod) {
 		spdlog::error("Error calling Init Method");
