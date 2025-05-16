@@ -13,10 +13,13 @@ Editor::Editor() {
     this->m_bRotation = false;
     this->m_bScale = false;
     this->m_guizmoOp = ImGuizmo::OPERATION::TRANSLATE;
+    this->m_console = nullptr;
 }
 
 void Editor::Init(UINT nWidth, UINT nHeight) {
     this->m_sceneMgr = SceneManager::GetInstance();
+    this->m_console = Console::GetInstance();
+    this->m_console->Init();
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -243,6 +246,8 @@ void Editor::Update() {
         ImGui::End();
     }
 
+
+    this->m_console->Update();
 }
 
 Editor* Editor::GetInstance() {

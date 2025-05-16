@@ -4,6 +4,7 @@
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/debug-helpers.h>
 #include <spdlog/spdlog.h>
+#include "Core/Editor/Editor.h"
 
 class MonoScript {
 private:

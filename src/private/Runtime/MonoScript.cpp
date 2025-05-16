@@ -12,6 +12,13 @@ MonoScript::MonoScript() {
 	this->m_filename = "Managed/ExeonScript.dll";
 }
 
+extern "C" void Console_Debug(MonoString* msg) {
+	const char* nativeMsg = mono_string_to_utf8(msg);
+
+	Console::GetInstance()->Debug(nativeMsg);
+	mono_free((void*)nativeMsg);
+}
+
 void MonoScript::Init() {
 	mono_set_dirs("C:/Program Files/Mono/lib", "C:/Program Files/Mono/etc");
 	this->m_domain = mono_jit_init("ExeonDomain");
@@ -43,6 +50,7 @@ void MonoScript::Init() {
 		return;
 	}
 
+	mono_add_internal_call("Exeon.ExeonScript::Debug", (const void*)Console_Debug);
 	mono_runtime_invoke(initMethod, nullptr, nullptr, nullptr);
 }
 
