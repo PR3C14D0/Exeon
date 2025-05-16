@@ -19,6 +19,10 @@ if(WIN32)
 	target_sources(Exeon PRIVATE icon.rc)
 endif()
 
+add_subdirectory("Managed")
+
+add_dependencies(Exeon GameFramework)
+
 set("PRIVATE_INCLUDE" "${CMAKE_CURRENT_SOURCE_DIR}/public")
 set("PUBLIC_INCLUDE" "${CMAKE_CURRENT_SOURCE_DIR}/../include")
 set("LIB" "${CMAKE_CURRENT_SOURCE_DIR}/../lib")
