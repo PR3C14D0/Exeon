@@ -20,7 +20,7 @@ void Console::Update() {
 }
 
 void Console::Debug(std::string msg) {
-	std::string log = this->m_log + "\n" + msg;
+	std::string log = this->m_log + "\n" + "[DEBUG] " +  msg;
 	this->m_log = log;
 	return;
 }

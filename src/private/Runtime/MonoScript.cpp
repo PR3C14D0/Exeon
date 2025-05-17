@@ -19,6 +19,15 @@ extern "C" void Console_Debug(MonoString* msg) {
 	mono_free((void*)nativeMsg);
 }
 
+extern "C" uintptr_t SceneManager_GetScene(MonoString* name) {
+	const char* nativeName = mono_string_to_utf8(name);
+	Scene* scene = SceneManager::GetInstance()->GetScene(nativeName);
+
+	mono_free((void*)nativeName);
+
+	return reinterpret_cast<uintptr_t>(scene);
+}
+
 void MonoScript::Init() {
 	mono_set_dirs("C:/Program Files/Mono/lib", "C:/Program Files/Mono/etc");
 	this->m_domain = mono_jit_init("ExeonDomain");
@@ -50,7 +59,8 @@ void MonoScript::Init() {
 		return;
 	}
 
-	mono_add_internal_call("Exeon.ExeonScript::Debug", (const void*)Console_Debug);
+	mono_add_internal_call("Exeon.Console::Debug", (const void*)Console_Debug);
+	mono_add_internal_call("Exeon.SceneManager::GetScene_Impl", (const void*)SceneManager_GetScene);
 	mono_runtime_invoke(initMethod, nullptr, nullptr, nullptr);
 }
 

@@ -5,6 +5,7 @@
 #include <mono/metadata/debug-helpers.h>
 #include <spdlog/spdlog.h>
 #include "Core/Editor/Editor.h"
+#include "Core/Scene/SceneManager.h"
 
 class MonoScript {
 private:

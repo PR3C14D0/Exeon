@@ -5,6 +5,7 @@ SceneManager* SceneManager::m_instance;
 SceneManager::SceneManager() {
 	this->m_sampleScene = new Scene("SampleScene");
 	this->m_actualScene = m_sampleScene;
+	this->AddScene(this->m_sampleScene);
 }
 
 void SceneManager::Init() {
