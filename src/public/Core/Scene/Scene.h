@@ -31,6 +31,8 @@ public:
 	void SetCurrentCamera(std::string cameraName);
 	Camera* GetCurrentCamera();
 
+	GameObject* GetObject(std::string name);
+
 	void AddGameObject(GameObject* object);
 	bool ObjectExists(std::string name);
 	bool CameraExists(std::string name);

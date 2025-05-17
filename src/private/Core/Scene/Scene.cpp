@@ -74,6 +74,15 @@ void Scene::SetCurrentCamera(std::string cameraName) {
 Camera* Scene::GetCurrentCamera() {
 	return this->m_currentCamera;
 }
+GameObject* Scene::GetObject(std::string name) {
+	if (!this->ObjectExists(name)) {
+		spdlog::error("Scene::GetObject: No GameObject with name {0} found", name);
+		return nullptr;
+	}
+
+	return this->m_gameObjects[name];
+}
+
 
 void Scene::AddGameObject(GameObject* object) {
 	if (!object)
