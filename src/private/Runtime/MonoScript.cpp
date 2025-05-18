@@ -49,11 +49,15 @@ void MonoScript::Init() {
 	mono_add_internal_call("Exeon.Scene::ObjectExists_Impl", reinterpret_cast<const void*>(Scene_ObjectExists));
 	mono_add_internal_call("Exeon.GameObject::GetTransform_Impl", reinterpret_cast<const void*>(GameObject_GetTransform));
 	mono_add_internal_call("Exeon.Transform::GetLocation_Impl", reinterpret_cast<const void*>(Transform_GetLocation));
+	mono_add_internal_call("Exeon.Transform::Translate_Impl", reinterpret_cast<const void*>(Transform_Translate));
 
 	mono_runtime_invoke(initMethod, nullptr, nullptr, nullptr);
 }
 
 void MonoScript::Update() {
+	MonoClass* gameScriptClass = mono_class_from_name(this->m_image, "Exeon", "ExeonScript");
+	MonoMethod* updateMethod = mono_class_get_method_from_name(gameScriptClass, "Update", 0);
+	mono_runtime_invoke(updateMethod, nullptr, nullptr, nullptr);
 
 }
 

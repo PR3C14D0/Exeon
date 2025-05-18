@@ -13,3 +13,9 @@ extern "C" CVector3 Transform_GetLocation(uintptr_t ptr) {
     CVector3 vec(loc.x, loc.y, loc.z);
     return vec;
 }
+
+extern "C" void Transform_Translate(uintptr_t ptr, float x, float y, float z) {
+    Transform* transform = reinterpret_cast<Transform*>(ptr);
+    transform->Translate(x, y, z);
+    return;
+}

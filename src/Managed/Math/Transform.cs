@@ -20,6 +20,8 @@ namespace Exeon
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern CVector3 GetLocation_Impl(UIntPtr ptr);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern void Translate_Impl(UIntPtr ptr, float x, float y, float z);
 
         private Vector3 GetLocation(UIntPtr ptr)
         {
@@ -36,6 +38,11 @@ namespace Exeon
         public Transform(UIntPtr ptr)
         {
             this.nativePtr = ptr;
+        }
+
+        public void Translate(float x, float y, float z)
+        {
+            Translate_Impl(this.nativePtr, x, y, z);
         }
 
         public Vector3 location

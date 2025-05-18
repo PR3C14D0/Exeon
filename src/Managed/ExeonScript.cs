@@ -7,12 +7,16 @@ namespace Exeon
     {
         public static void Init()
         {
+            Console.Debug("C# Scripting working");
+        }
+
+        public static void Update()
+        {
             Scene sampleScene = SceneManager.GetScene("SampleScene");
 
-            Console.Debug("C# Scripting working");
             GameObject obj = sampleScene.GetObject("Sponza Atrium");
             Transform transform = obj.transform;
-            Console.Debug(transform.location.x.ToString());
+            // transform.Translate(1.0f, 0.0f, 0.0f);
         }
     }
 }

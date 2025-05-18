@@ -14,4 +14,5 @@ extern "C" {
 
     uintptr_t GameObject_GetTransform(uintptr_t ptr);
     CVector3 Transform_GetLocation(uintptr_t ptr);
+    void Transform_Translate(uintptr_t ptr, float x, float y, float z);
 }

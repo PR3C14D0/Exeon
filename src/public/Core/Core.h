@@ -7,6 +7,12 @@
 #include "Renderer/ResourceManager.h"
 #include "Runtime/MonoScript.h"
 
+enum GAME_STATUS {
+	STOPPED = 0x00,
+	PLAYING = 0x01,
+	PAUSED = 0x02
+};
+
 class Core {
 private:
 	static Core* m_instance;
@@ -22,6 +28,8 @@ private:
 	UINT m_nHeight;
 
 	MonoScript* m_mono;
+
+	GAME_STATUS m_status;
 public:
 	Core();
 	void Init();

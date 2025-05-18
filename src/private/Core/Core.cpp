@@ -8,6 +8,7 @@ Core::Core() {
 	this->m_sceneManager = SceneManager::GetInstance();
 	this->m_resMgr = nullptr;
 	this->m_mono = nullptr;
+	this->m_status = GAME_STATUS::STOPPED;
 }
 
 void Core::Init() {
@@ -33,6 +34,7 @@ void Core::SetHWND(HWND& hwnd) {
 void Core::MainLoop() {
 	this->m_sceneManager->Update();
 	this->m_renderer->Update();
+	this->m_mono->Update();
 }
 
 void Core::GetWindowSize(UINT& nWidth, UINT& nHeight) {
