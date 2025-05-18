@@ -21,6 +21,10 @@ void GameObject::Update() {
 	}
 }
 
+Component* GameObject::GetComponent(std::string name) {
+	return nullptr;
+}
+
 void GameObject::Render() {
 	for (Component* component : this->m_components) {
 		if (Mesh* mesh = dynamic_cast<Mesh*>(component)) {

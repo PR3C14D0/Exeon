@@ -12,22 +12,6 @@ MonoScript::MonoScript() {
 	this->m_filename = "Managed/ExeonScript.dll";
 }
 
-extern "C" void Console_Debug(MonoString* msg) {
-	const char* nativeMsg = mono_string_to_utf8(msg);
-
-	Console::GetInstance()->Debug(nativeMsg);
-	mono_free((void*)nativeMsg);
-}
-
-extern "C" uintptr_t SceneManager_GetScene(MonoString* name) {
-	const char* nativeName = mono_string_to_utf8(name);
-	Scene* scene = SceneManager::GetInstance()->GetScene(nativeName);
-
-	mono_free((void*)nativeName);
-
-	return reinterpret_cast<uintptr_t>(scene);
-}
-
 void MonoScript::Init() {
 	mono_set_dirs("C:/Program Files/Mono/lib", "C:/Program Files/Mono/etc");
 	this->m_domain = mono_jit_init("ExeonDomain");
@@ -59,8 +43,12 @@ void MonoScript::Init() {
 		return;
 	}
 
-	mono_add_internal_call("Exeon.Console::Debug", (const void*)Console_Debug);
-	mono_add_internal_call("Exeon.SceneManager::GetScene_Impl", (const void*)SceneManager_GetScene);
+	mono_add_internal_call("Exeon.Console::Debug", reinterpret_cast<const void*>(Console_Debug));
+	mono_add_internal_call("Exeon.SceneManager::GetScene_Impl", reinterpret_cast<const void*>(SceneManager_GetScene));
+	mono_add_internal_call("Exeon.Scene::GetObject_Impl", reinterpret_cast<const void*>(Scene_GetObject));
+	mono_add_internal_call("Exeon.Scene::ObjectExists_Impl", reinterpret_cast<const void*>(Scene_ObjectExists));
+	mono_add_internal_call("Exeon.GameObject::GetTransform_Impl", reinterpret_cast<const void*>(GameObject_GetTransform));
+
 	mono_runtime_invoke(initMethod, nullptr, nullptr, nullptr);
 }
 

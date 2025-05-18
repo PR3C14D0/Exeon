@@ -4,6 +4,9 @@
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/debug-helpers.h>
 #include <spdlog/spdlog.h>
+#include "SceneImpl.h"
+#include "ConsoleImpl.h"
+#include "GameObjectImpl.h"
 #include "Core/Editor/Editor.h"
 #include "Core/Scene/SceneManager.h"
 
