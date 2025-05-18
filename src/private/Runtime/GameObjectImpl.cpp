@@ -7,8 +7,9 @@ extern "C" uintptr_t GameObject_GetTransform(uintptr_t ptr) {
     return pTransform;
 }
 
-extern "C" uintptr_t Transform_GetLocation(uintptr_t ptr) {
-    Transform* trasnform = reinterpret_cast<Transform*>(ptr);
-    uintptr_t pLocation = reinterpret_cast<uintptr_t>(&trasnform->location);
-    return pLocation;
+extern "C" CVector3 Transform_GetLocation(uintptr_t ptr) {
+    Transform* transform = reinterpret_cast<Transform*>(ptr);
+    Vector3 loc = transform->location;
+    CVector3 vec(loc.x, loc.y, loc.z);
+    return vec;
 }

@@ -9,7 +9,10 @@ namespace Exeon
         {
             Scene sampleScene = SceneManager.GetScene("SampleScene");
 
-            Console.Debug(sampleScene.ObjectExists("Sponza Atrium").ToString());
+            Console.Debug("C# Scripting working");
+            GameObject obj = sampleScene.GetObject("Sponza Atrium");
+            Transform transform = obj.transform;
+            Console.Debug(transform.location.x.ToString());
         }
     }
 }

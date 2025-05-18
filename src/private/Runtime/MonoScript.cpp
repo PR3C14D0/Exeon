@@ -48,6 +48,7 @@ void MonoScript::Init() {
 	mono_add_internal_call("Exeon.Scene::GetObject_Impl", reinterpret_cast<const void*>(Scene_GetObject));
 	mono_add_internal_call("Exeon.Scene::ObjectExists_Impl", reinterpret_cast<const void*>(Scene_ObjectExists));
 	mono_add_internal_call("Exeon.GameObject::GetTransform_Impl", reinterpret_cast<const void*>(GameObject_GetTransform));
+	mono_add_internal_call("Exeon.Transform::GetLocation_Impl", reinterpret_cast<const void*>(Transform_GetLocation));
 
 	mono_runtime_invoke(initMethod, nullptr, nullptr, nullptr);
 }
