@@ -9,7 +9,9 @@ add_executable (Exeon  "main.cpp" "icon.rc"  "public/Core/Core.h" "private/Core/
 		public/Runtime/ConsoleImpl.h
 		private/Runtime/ConsoleImpl.cpp
 		public/Runtime/GameObjectImpl.h
-		private/Runtime/GameObjectImpl.cpp)
+		private/Runtime/GameObjectImpl.cpp
+		public/Subsystem/Discord.h
+		private/Subsystem/Discord.cpp)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Exeon PROPERTY CXX_STANDARD 20)
@@ -47,7 +49,7 @@ add_library("ImGUI" STATIC ${IMGUI_SRC})
 add_library("ImGuizmo" STATIC ${IMGUIZMO_SRC})
 
 target_link_libraries(Exeon "d3d12.lib;dxgi.lib;d3dcompiler.lib")
-target_link_libraries(Exeon "${LIB}/assimp-vc143-mt.lib;${LIB}/DirectXTK12.lib;${LIB}/spdlogd.lib;${LIB}/mono-2.0-sgen.lib")
+target_link_libraries(Exeon "${LIB}/assimp-vc143-mt.lib;${LIB}/DirectXTK12.lib;${LIB}/spdlogd.lib;${LIB}/mono-2.0-sgen.lib;${LIB}/discord_partner_sdk.lib")
 target_link_libraries(Exeon ImGUI)
 target_link_libraries(Exeon ImGuizmo)
 

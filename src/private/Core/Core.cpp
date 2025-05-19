@@ -1,4 +1,5 @@
 #include "Core/Core.h"
+#include "Subsystem/Discord.h"
 
 Core* Core::m_instance;
 
@@ -9,6 +10,7 @@ Core::Core() {
 	this->m_resMgr = nullptr;
 	this->m_mono = nullptr;
 	this->m_status = GAME_STATUS::STOPPED;
+	this->m_discord = Discord::GetInstance();
 }
 
 void Core::Init() {
@@ -25,10 +27,12 @@ void Core::Init() {
 
 	this->m_mono = MonoScript::GetInstance();
 	this->m_mono->Init();
+	this->m_discord->Init();
 }
 
 void Core::SetHWND(HWND& hwnd) {
 	this->m_hwnd = hwnd;
+
 }
 
 void Core::MainLoop() {

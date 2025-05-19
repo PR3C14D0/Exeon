@@ -13,6 +13,8 @@ enum GAME_STATUS {
 	PAUSED = 0x02
 };
 
+class Discord;
+
 class Core {
 private:
 	static Core* m_instance;
@@ -30,6 +32,8 @@ private:
 	MonoScript* m_mono;
 
 	GAME_STATUS m_status;
+
+	Discord* m_discord;
 public:
 	Core();
 	void Init();
