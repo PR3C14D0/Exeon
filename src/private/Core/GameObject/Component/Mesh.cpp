@@ -392,6 +392,10 @@ void Mesh::LoadModel(std::string filename) {
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(filename, NULL);
 
+	ResourceManager* resMgr = ResourceManager::GetInstance();
+	std::atomic<int> taskPending = 0;
+	std::vector<std::thread> threads;
+
 	for (UINT i = 0; i < scene->mNumMeshes; i++) {
 		aiMesh* mesh = scene->mMeshes[i];
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
@@ -443,12 +447,19 @@ void Mesh::LoadModel(std::string filename) {
 		if (material->GetTextureCount(aiTextureType_BASE_COLOR) > 0 && material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS) {
 			const aiTexture* texture = scene->GetEmbeddedTexture(texPath.C_Str());
 			if (texture != nullptr) {
-				ResourceManager* resMgr = ResourceManager::GetInstance();
 				std::string name = std::string(texPath.C_Str());
-				ComPtr<ID3D12Resource> resource;
-				resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, name, resource);
-				resource->SetName(L"Mesh Base color");
-				this->m_textures[i] = resource;
+				taskPending++;
+				threads.emplace_back([=, &taskPending, this]() {
+					if (!texture) {
+						taskPending--;
+						return;
+					}
+					ComPtr<ID3D12Resource> resource;
+					resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, name, resource);
+					resource->SetName(L"Mesh Base color");
+					this->m_textures[i] = resource;
+					taskPending--;
+				});
 			}
 		}
 
@@ -456,13 +467,21 @@ void Mesh::LoadModel(std::string filename) {
 			const aiTexture* texture = scene->GetEmbeddedTexture(metalPath.C_Str());
 
 			if (texture != nullptr) {
-				ResourceManager* resMgr = ResourceManager::GetInstance();
 				std::string name = std::string(metalPath.C_Str());
+				if (!texture) {
+					taskPending--;
+					return;
+				}
 				ComPtr<ID3D12Resource> resource;
 				resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, name, resource);
 				resource->SetName(L"Mesh Metallic Roughness");
 				this->m_ORMTextures[i] = resource;
+				taskPending--;
 			}
 		}
+	}
+
+	for (std::thread& t : threads) {
+		if (t.joinable()) t.join();
 	}
 }

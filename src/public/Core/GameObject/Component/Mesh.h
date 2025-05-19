@@ -12,6 +12,9 @@
 #include "Util.h"
 #include <string>
 
+#include <thread>
+#include <atomic>
+
 #include "Core/GameObject/Component/Component.h"
 #include "Core/Renderer/Shader.h"
 #include "Core/Renderer/Descriptor.h"
