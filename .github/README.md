@@ -20,3 +20,4 @@
 - [DirectXMath](https://github.com/microsoft/DirectXMath)
 - [spdlog](https://github.com/gabime/spdlog)
 - [ImGuizmo](https://github.com/CedricGuillemet/ImGuizmo)
+- [IconFontCppHeaders](https://github.com/juliettef/IconFontCppHeaders)

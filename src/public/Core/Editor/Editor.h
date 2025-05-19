@@ -7,6 +7,7 @@
 #include "Core/Scene/SceneManager.h"
 #include "Console.h"
 #include "Util.h"
+#include <IconsFontAwesome5.h>
 
 class Editor {
 private:

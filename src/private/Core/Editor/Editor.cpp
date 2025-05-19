@@ -25,7 +25,16 @@ void Editor::Init(UINT nWidth, UINT nHeight) {
 
     ImFontConfig fontCfg = { };
     fontCfg.FontDataOwnedByAtlas = false;
+
+    ImFontConfig icons_config;
+    icons_config.MergeMode = true;
+    icons_config.PixelSnapH = true;
+    icons_config.GlyphMinAdvanceX = 20.f * 2.f / 3.f;
+
+    static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+
     io.Fonts->AddFontFromMemoryTTF(Roboto, nRobotoSize, 20.f, &fontCfg);
+    io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS,  20.f * 2.f / 3.f, &icons_config, icons_ranges);
 
     /*
         https://github.com/ocornut/imgui/issues/707#issuecomment-2732535348
@@ -133,6 +142,13 @@ void Editor::Update() {
     if (ImGui::BeginMenu("Build")) {
 
     }
+    float windowWidth = ImGui::GetWindowSize().x;
+
+    const char* playIcon = ICON_FA_PLAY;
+    float textWidth = ImGui::CalcTextSize(playIcon).x;
+
+    ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+    ImGui::Button(playIcon, ImVec2{25.f, 25.f});
     ImGui::EndMainMenuBar();
 
     if (this->m_sceneMgr) {
