@@ -27,7 +27,7 @@ void Core::Init() {
 
 	this->m_mono = MonoScript::GetInstance();
 	this->m_mono->Init();
-	this->m_discord->Init();
+	// this->m_discord->Init();
 }
 
 void Core::SetHWND(HWND& hwnd) {

@@ -14,6 +14,7 @@ Editor::Editor() {
     this->m_bScale = false;
     this->m_guizmoOp = ImGuizmo::OPERATION::TRANSLATE;
     this->m_console = nullptr;
+    this->m_bPlaying = false;
 }
 
 void Editor::Init(UINT nWidth, UINT nHeight) {
@@ -121,6 +122,9 @@ void Editor::Init(UINT nWidth, UINT nHeight) {
 
     this->m_nWidth = nWidth;
     this->m_nHeight = nHeight;
+
+    ThrowIfFailed(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
+        COINIT_DISABLE_OLE1DDE));
 }
 
 void Editor::Update() {
@@ -129,6 +133,30 @@ void Editor::Update() {
         if (ImGui::MenuItem("Create")) {
         }
         if (ImGui::MenuItem("Open", "Ctrl+O")) {
+            IFileOpenDialog* pFileOpen;
+
+            ThrowIfFailed(CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+                IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen)));
+
+            COMDLG_FILTERSPEC fileTypes[] =
+            {
+                { L"Exeon Project (*.exproj)", L"*.exproj" }
+            };
+            ThrowIfFailed(pFileOpen->SetFileTypes(1, fileTypes));
+            ThrowIfFailed(pFileOpen->SetFileTypeIndex(1));
+            
+
+            if (SUCCEEDED(pFileOpen->Show(nullptr))) {
+                IShellItem* pItem;
+                if (SUCCEEDED(pFileOpen->GetResult(&pItem))) {
+                    PWSTR pszPath;
+                    if (SUCCEEDED(pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszPath))) {
+                        // TODO: Make it open the project
+                    }
+
+                }
+            }
+            CoUninitialize();
         }
         if (ImGui::MenuItem("Save", "Ctrl+S")) {
         }
@@ -144,11 +172,22 @@ void Editor::Update() {
     }
     float windowWidth = ImGui::GetWindowSize().x;
 
-    const char* playIcon = ICON_FA_PLAY;
-    float textWidth = ImGui::CalcTextSize(playIcon).x;
 
-    ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
-    ImGui::Button(playIcon, ImVec2{25.f, 25.f});
+    if (!this->m_bPlaying) {
+        const char* playIcon = ICON_FA_PLAY;
+        float textWidth = ImGui::CalcTextSize(playIcon).x;
+        ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+        if (ImGui::Button(playIcon, ImVec2{25.f, 25.f})) {
+            this->m_bPlaying = !this->m_bPlaying;
+        }
+    } else {
+        const char* playIcon = ICON_FA_PAUSE;
+        float textWidth = ImGui::CalcTextSize(playIcon).x;
+        ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+        if (ImGui::Button(playIcon, ImVec2{25.f, 25.f})) {
+            this->m_bPlaying = !this->m_bPlaying;
+        }
+    }
     ImGui::EndMainMenuBar();
 
     if (this->m_sceneMgr) {

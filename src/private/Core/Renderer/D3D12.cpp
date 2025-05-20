@@ -317,7 +317,6 @@ void D3D12::Update() {
 	ImGuizmo::SetDrawlist(ImGui::GetBackgroundDrawList());
 	ImGuizmo::SetRect(0, 0, this->m_nWidth, this->m_nHeight);
 
-	// Establecer el área donde se dibujará el guizmo en la ventana
 	ImGuizmo::SetRect(0.0f, 0.0f, static_cast<float>(this->m_nWidth), static_cast<float>(this->m_nHeight));
 
 
@@ -378,7 +377,6 @@ void D3D12::ResourceBarrier(ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STAT
 
 	D3D12_RESOURCE_STATES currentState = m_resourceStates[resource.Get()];
 
-	// Si el estado conocido no es el declarado, usa el conocido
 	if (currentState != oldState && currentState != D3D12_RESOURCE_STATE_COMMON)
 		oldState = currentState;
 

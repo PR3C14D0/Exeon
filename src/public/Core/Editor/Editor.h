@@ -8,6 +8,8 @@
 #include "Console.h"
 #include "Util.h"
 #include <IconsFontAwesome5.h>
+#include <shobjidl.h>
+
 
 class Editor {
 private:
@@ -26,6 +28,9 @@ private:
 	bool m_bLocation;
 	bool m_bRotation;
 	bool m_bScale;
+
+	bool m_bPlaying;
+
 	ImGuizmo::OPERATION m_guizmoOp;
 public:
 	Editor();
