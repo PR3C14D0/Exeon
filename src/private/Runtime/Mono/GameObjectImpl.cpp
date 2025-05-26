@@ -1,4 +1,4 @@
-#include "Runtime/GameObjectImpl.h"
+#include "../../../public/Runtime/Mono/GameObjectImpl.h"
 
 extern "C" uintptr_t GameObject_GetTransform(uintptr_t ptr) {
     GameObject* obj = reinterpret_cast<GameObject*>(ptr);

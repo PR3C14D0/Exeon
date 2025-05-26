@@ -1,4 +1,4 @@
-#include "Runtime/MonoScript.h"
+#include "../../../public/Runtime/Mono/MonoScript.h"
 
 MonoScript* MonoScript::m_instance;
 MonoDomain* MonoScript::m_domain;

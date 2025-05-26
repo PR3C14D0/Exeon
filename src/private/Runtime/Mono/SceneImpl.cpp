@@ -1,4 +1,4 @@
-#include "Runtime/SceneImpl.h"
+#include "../../../public/Runtime/Mono/SceneImpl.h"
 
 extern "C" uintptr_t SceneManager_GetScene(MonoString* name) {
     char* nativeName = mono_string_to_utf8(name);

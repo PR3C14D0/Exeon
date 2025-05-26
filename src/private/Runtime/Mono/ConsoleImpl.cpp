@@ -1,4 +1,4 @@
-#include "Runtime/ConsoleImpl.h"
+#include "../../../public/Runtime/Mono/ConsoleImpl.h"
 
 extern "C" void Console_Debug(MonoString* msg) {
     char* nativeMsg = mono_string_to_utf8(msg);
