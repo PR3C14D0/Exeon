@@ -33,6 +33,7 @@ private:
 	Renderer* m_renderer;
 
 	ComPtr<ID3D12Device1> m_dev;
+	ComPtr<ID3D12GraphicsCommandList> m_list;
 
 	std::map<std::string, ComPtr<ID3D12Resource>> m_resources;
 
@@ -49,4 +50,6 @@ public:
 	void LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::string texName, ComPtr<ID3D12Resource>& resource);
 	void LoadTextureFile(std::string texName, ComPtr<ID3D12Resource>& resource);
 	static ResourceManager* GetInstance();
+
+	void CreateTextureVec4(float r, float g, float b, float a, ComPtr<ID3D12Resource>& resource);
 };

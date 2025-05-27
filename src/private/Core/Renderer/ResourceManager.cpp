@@ -14,6 +14,7 @@ ResourceManager::ResourceManager() {
 
 void ResourceManager::D3D12Impl(D3D12* renderer) {
 	renderer->GetDevice(this->m_dev);
+	renderer->GetCommandList(this->m_list);
 }
 
 void ResourceManager::Init() {
@@ -59,6 +60,54 @@ void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::s
 	batch.End(d3d12->m_queue.Get());
 
 	this->m_resources[texName] = resource;
+}
+
+void ResourceManager::CreateTextureVec4(float r, float g, float b, float a, ComPtr<ID3D12Resource>& resource) {
+	ComPtr<ID3D12Resource> res;
+	D3D12_RESOURCE_DESC resDesc = {};
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resDesc.Width = 1;
+	resDesc.Height = 1;
+	resDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	resDesc.SampleDesc.Count = 1;
+	resDesc.MipLevels = 1;
+	resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resDesc.DepthOrArraySize = 1;
+
+	CD3DX12_HEAP_PROPERTIES resProps(D3D12_HEAP_TYPE_DEFAULT);
+	ThrowIfFailed(this->m_dev->CreateCommittedResource(
+		&resProps,
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(res.GetAddressOf())));
+
+	ComPtr<ID3D12Resource> uploadRes;
+	CD3DX12_HEAP_PROPERTIES uploadProps(D3D12_HEAP_TYPE_UPLOAD);
+	D3D12_RESOURCE_DESC uploadResDesc = CD3DX12_RESOURCE_DESC::Buffer(1024);
+	ThrowIfFailed(this->m_dev->CreateCommittedResource(
+		&uploadProps,
+		D3D12_HEAP_FLAG_NONE,
+		&uploadResDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(uploadRes.GetAddressOf())));
+	float colorData[4] = { r, g, b, a };
+
+	D3D12_SUBRESOURCE_DATA subresourceData = {};
+	subresourceData.pData = colorData;
+	subresourceData.RowPitch = sizeof(float) * 4;
+	subresourceData.SlicePitch = sizeof(float) * 4;
+
+	UpdateSubresources(this->m_list.Get(), res.Get(), uploadRes.Get(), 0, 0, 1, &subresourceData);
+
+	D3D12* d3d12 = reinterpret_cast<D3D12*>(this->m_renderer);
+	d3d12->ResourceBarrier(res, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+	res->SetName(L"Vector4 Texture");
+
+	resource = res;
 }
 
 void ResourceManager::LoadTextureFile(std::string texName, ComPtr<ID3D12Resource>& resource) {
