@@ -63,52 +63,45 @@ void ResourceManager::LoadTexture(const uint8_t* pData, DWORD dwDataSize, std::s
 }
 
 void ResourceManager::CreateTextureVec4(float r, float g, float b, float a, ComPtr<ID3D12Resource>& resource) {
-	ComPtr<ID3D12Resource> res;
-	D3D12_RESOURCE_DESC resDesc = {};
-	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	resDesc.Width = 1;
-	resDesc.Height = 1;
-	resDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	resDesc.SampleDesc.Count = 1;
-	resDesc.MipLevels = 1;
-	resDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	resDesc.DepthOrArraySize = 1;
+	ResourceUploadBatch upload(m_dev.Get());
+	upload.Begin();
 
-	CD3DX12_HEAP_PROPERTIES resProps(D3D12_HEAP_TYPE_DEFAULT);
-	ThrowIfFailed(this->m_dev->CreateCommittedResource(
-		&resProps,
+	D3D12_RESOURCE_DESC texDesc = {};
+	texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	texDesc.Width = 1;
+	texDesc.Height = 1;
+	texDesc.DepthOrArraySize = 1;
+	texDesc.MipLevels = 1;
+	texDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+	CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+	ThrowIfFailed(m_dev->CreateCommittedResource(
+		&heapProps,
 		D3D12_HEAP_FLAG_NONE,
-		&resDesc,
+		&texDesc,
 		D3D12_RESOURCE_STATE_COPY_DEST,
 		nullptr,
-		IID_PPV_ARGS(res.GetAddressOf())));
+		IID_PPV_ARGS(resource.GetAddressOf())));
 
-	ComPtr<ID3D12Resource> uploadRes;
-	CD3DX12_HEAP_PROPERTIES uploadProps(D3D12_HEAP_TYPE_UPLOAD);
-	D3D12_RESOURCE_DESC uploadResDesc = CD3DX12_RESOURCE_DESC::Buffer(1024);
-	ThrowIfFailed(this->m_dev->CreateCommittedResource(
-		&uploadProps,
-		D3D12_HEAP_FLAG_NONE,
-		&uploadResDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(uploadRes.GetAddressOf())));
-	float colorData[4] = { r, g, b, a };
+	std::array<float, 4> color = { r, g, b, a };
+	D3D12_SUBRESOURCE_DATA initData = {};
+	initData.pData = color.data();
+	initData.RowPitch = sizeof(float) * 4;
+	initData.SlicePitch = initData.RowPitch;
 
-	D3D12_SUBRESOURCE_DATA subresourceData = {};
-	subresourceData.pData = colorData;
-	subresourceData.RowPitch = sizeof(float) * 4;
-	subresourceData.SlicePitch = sizeof(float) * 4;
-
-	UpdateSubresources(this->m_list.Get(), res.Get(), uploadRes.Get(), 0, 0, 1, &subresourceData);
-
+	upload.Upload(resource.Get(), 0, &initData, 1);
 	D3D12* d3d12 = reinterpret_cast<D3D12*>(this->m_renderer);
-	d3d12->ResourceBarrier(res, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	upload.Transition(resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	res->SetName(L"Vector4 Texture");
 
-	resource = res;
+	upload.End(d3d12->m_queue.Get());
+
+	resource->SetName(L"Vector4 Texture");
 }
+
 
 void ResourceManager::LoadTextureFile(std::string texName, ComPtr<ID3D12Resource>& resource) {
 	if (!this->AddResource(texName, resource)) {
