@@ -308,7 +308,7 @@ void ScreenQuad::InitConstantBuffer() {
 
 		this->m_sqCBuffData.InverseView = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseView);
 
-		this->m_sqCBuffData.InverseProjection = (XMMatrixPerspectiveFovLH(
+		this->m_sqCBuffData.InverseProjection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(
 			XMConvertToRadians(70.f), 
 			static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
 			0.001f, 
