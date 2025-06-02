@@ -15,36 +15,46 @@ void Light::Init() {
     GameObject::Init();
 
     if (D3D12* renderer = reinterpret_cast<D3D12*>(this->m_renderer)) {
-        Transform transform = this->transform;
-        XMVECTOR eye = XMVectorSet(
-                transform.location.x,
-                transform.location.y,
-                transform.location.z,
-                1.0f
-            );
+        this->InitConstantBuffers(renderer);
+        renderer->m_dsvHeap->Allocate(1);
+        this->m_nDepthIndex = renderer->m_dsvHeap->GetLastDescriptorIndex();
 
-        float pitch = XMConvertToRadians(transform.rotation.x);
-        float yaw = XMConvertToRadians(transform.rotation.y);
+        this->m_shader = new Shader("ShadowPass.hlsl", "VertexMain", "PixelMain");
 
-        XMVECTOR forward = XMVectorSet(
-            cosf(pitch) * sinf(yaw),
-            -sinf(pitch),
-            -cosf(pitch) * cosf(yaw),
-            0.0f
-        );
-
-        XMVECTOR at = XMVectorAdd(eye, forward);
-
-        XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-        this->m_lightBuffer.View = XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up));
-        this->m_lightBuffer.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(
-			    XMConvertToRadians(70.f),
-			    static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
-			    0.001f,
-			    3000.f));
     }
 
 }
+
+void Light::InitConstantBuffers(D3D12* renderer) {
+    Transform transform = this->transform;
+    XMVECTOR eye = XMVectorSet(
+            transform.location.x,
+            transform.location.y,
+            transform.location.z,
+            1.0f
+        );
+
+    float pitch = XMConvertToRadians(transform.rotation.x);
+    float yaw = XMConvertToRadians(transform.rotation.y);
+
+    XMVECTOR forward = XMVectorSet(
+        cosf(pitch) * sinf(yaw),
+        -sinf(pitch),
+        -cosf(pitch) * cosf(yaw),
+        0.0f
+    );
+
+    XMVECTOR at = XMVectorAdd(eye, forward);
+
+    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+    this->m_lightBuffer.View = XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up));
+    this->m_lightBuffer.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(
+            XMConvertToRadians(70.f),
+            static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
+            0.001f,
+            3000.f));
+}
+
 
 void Light::Update() {
     GameObject::Update();
