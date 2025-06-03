@@ -10,7 +10,7 @@ D3D12::D3D12() : Renderer::Renderer() {
 
 	this->m_nAlbedoIndex = 0;
 	this->m_nUVIndex = 0;
-	this->m_nPositionIndex = 0;
+	this->m_nEmissiveIndex = 0;
 	this->sceneMgr = SceneManager::GetInstance();
 	this->m_samplerHeap = nullptr;
 	this->m_editor = Editor::GetInstance();
@@ -96,18 +96,18 @@ void D3D12::Init(HWND hwnd) {
 
 	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_albedoBuff);
 	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_uvBuff);
-	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_positionBuff);
+	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_emissiveBuff);
 	this->CreateTexture(this->m_nWidth, this->m_nHeight, 8, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, this->m_ORMBuff);
 
 	this->m_albedoBuff->SetName(L"Albedo");
 	this->m_uvBuff->SetName(L"Normal");
-	this->m_positionBuff->SetName(L"Position");
+	this->m_emissiveBuff->SetName(L"Emissive");
 	this->m_ORMBuff->SetName(L"ORM G-Buffer");
 	
 	this->m_nAlbedoIndex = this->m_rtvHeap->GetDescriptorCount();
 	this->m_nUVIndex = this->m_nAlbedoIndex + 1;
-	this->m_nPositionIndex = this->m_nUVIndex + 1;
-	this->m_nORMIndex = this->m_nPositionIndex + 1;
+	this->m_nEmissiveIndex = this->m_nUVIndex + 1;
+	this->m_nORMIndex = this->m_nEmissiveIndex + 1;
 
 	D3D12_RENDER_TARGET_VIEW_DESC GBufferDesc = { };
 	GBufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -119,23 +119,23 @@ void D3D12::Init(HWND hwnd) {
 
 	Descriptor albedoDesc = this->m_rtvHeap->GetDescriptor(this->m_nAlbedoIndex);
 	Descriptor UVDesc = this->m_rtvHeap->GetDescriptor(this->m_nUVIndex);
-	Descriptor positionDesc =  this->m_rtvHeap->GetDescriptor(this->m_nPositionIndex);
+	Descriptor positionDesc =  this->m_rtvHeap->GetDescriptor(this->m_nEmissiveIndex);
 	Descriptor ORMDesc = this->m_rtvHeap->GetDescriptor(this->m_nORMIndex);
 
 	this->m_dev->CreateRenderTargetView(this->m_albedoBuff.Get(), &GBufferDesc, albedoDesc.cpuHandle);
 	this->m_dev->CreateRenderTargetView(this->m_uvBuff.Get(), &GBufferDesc, UVDesc.cpuHandle);
-	this->m_dev->CreateRenderTargetView(this->m_positionBuff.Get(), &GBufferDesc, positionDesc.cpuHandle);
+	this->m_dev->CreateRenderTargetView(this->m_emissiveBuff.Get(), &GBufferDesc, positionDesc.cpuHandle);
 	this->m_dev->CreateRenderTargetView(this->m_ORMBuff.Get(), &GBufferDesc, ORMDesc.cpuHandle);
 
 	this->ResourceBarrier(this->m_albedoBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	this->ResourceBarrier(this->m_uvBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	this->ResourceBarrier(this->m_positionBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	this->ResourceBarrier(this->m_emissiveBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	this->ResourceBarrier(this->m_ORMBuff.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	/* Track states */
 	m_resourceStates[this->m_albedoBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	m_resourceStates[this->m_uvBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
-	m_resourceStates[this->m_positionBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	m_resourceStates[this->m_emissiveBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	m_resourceStates[this->m_ORMBuff.Get()] = D3D12_RESOURCE_STATE_RENDER_TARGET;
 
 	// We'll allocate the initial value for our ScreenQuad.
@@ -233,10 +233,21 @@ void D3D12::Update() {
 	ComPtr<ID3D12Resource> actualBuffer = this->m_backBuffers[this->m_nActualBackBuffer];
 	this->ResourceBarrier(actualBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
+	ID3D12DescriptorHeap* descriptorHeaps[] = {
+		this->m_cbvSrvHeap->m_heap.Get(),
+		this->m_samplerHeap->m_heap.Get()
+	};
+	this->m_list->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+
+	this->m_list->RSSetViewports(1, &this->m_viewport);
+	this->m_list->RSSetScissorRects(1, &this->m_scissor);
+
+	this->sceneMgr->ShadowPass();
+
 	if (this->m_resourceStates[this->m_albedoBuff.Get()] != D3D12_RESOURCE_STATE_RENDER_TARGET) {
 		this->ResourceBarrier(this->m_albedoBuff, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		this->ResourceBarrier(this->m_uvBuff, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		this->ResourceBarrier(this->m_positionBuff, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		this->ResourceBarrier(this->m_emissiveBuff, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		this->ResourceBarrier(this->m_ORMBuff, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	}
 
@@ -244,7 +255,7 @@ void D3D12::Update() {
 	Descriptor albedoDesc = this->m_rtvHeap->GetDescriptor(this->m_nAlbedoIndex);
 	Descriptor UVDesc = this->m_rtvHeap->GetDescriptor(this->m_nUVIndex);
 	Descriptor ORMDesc = this->m_rtvHeap->GetDescriptor(this->m_nORMIndex);
-	Descriptor positionDesc = this->m_rtvHeap->GetDescriptor(this->m_nPositionIndex);
+	Descriptor positionDesc = this->m_rtvHeap->GetDescriptor(this->m_nEmissiveIndex);
 	Descriptor dsvDesc = this->m_dsvHeap->GetDescriptor(0);
 	this->m_list->ClearRenderTargetView(albedoDesc.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
 	this->m_list->ClearRenderTargetView(UVDesc.cpuHandle, RGBA{ 0.f, 0.f, 0.f, 1.f }, 0, nullptr);
@@ -263,17 +274,12 @@ void D3D12::Update() {
 	};
 	this->m_list->OMSetRenderTargets(_countof(gbuffers), gbuffers, FALSE, &dsvDesc.cpuHandle);
 
-	ID3D12DescriptorHeap* descriptorHeaps[] = {
-		this->m_cbvSrvHeap->m_heap.Get(),
-		this->m_samplerHeap->m_heap.Get()
-	};
-	this->m_list->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	this->sceneMgr->Render();
 
 	this->ResourceBarrier(this->m_albedoBuff, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	this->ResourceBarrier(this->m_uvBuff, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	this->ResourceBarrier(this->m_positionBuff, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	this->ResourceBarrier(this->m_emissiveBuff, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	this->ResourceBarrier(this->m_ORMBuff, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	Descriptor rtv = this->m_rtvHeap->GetDescriptor(this->m_nActualBackBuffer);
@@ -318,8 +324,6 @@ void D3D12::Update() {
 	ImGuizmo::SetRect(0, 0, this->m_nWidth, this->m_nHeight);
 
 	ImGuizmo::SetRect(0.0f, 0.0f, static_cast<float>(this->m_nWidth), static_cast<float>(this->m_nHeight));
-
-
 
 	this->m_editor->Update();
 

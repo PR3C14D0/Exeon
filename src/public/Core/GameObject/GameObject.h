@@ -26,5 +26,6 @@ public:
 	virtual void Init();
 	virtual void Update();
 	Component* GetComponent(std::string name);
-	void Render();
+	virtual void Render();
+	virtual void ShadowPass(WVP wvp);
 };

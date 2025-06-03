@@ -29,6 +29,7 @@ class D3D12 : public Renderer {
 	friend ScreenQuad;
 	friend class ResourceManager;
 	friend class Mesh;
+	friend class Light;
 private:
 
 	ComPtr<IDXGIFactory4> m_factory;
@@ -65,12 +66,12 @@ private:
 
 	ComPtr<ID3D12Resource> m_albedoBuff;
 	ComPtr<ID3D12Resource> m_uvBuff;
-	ComPtr<ID3D12Resource> m_positionBuff;
+	ComPtr<ID3D12Resource> m_emissiveBuff;
 	ComPtr<ID3D12Resource> m_ORMBuff;
 
 	UINT m_nAlbedoIndex;
 	UINT m_nUVIndex;
-	UINT m_nPositionIndex;
+	UINT m_nEmissiveIndex;
 	UINT m_nORMIndex;
 
 	UINT m_nBackBuffers;

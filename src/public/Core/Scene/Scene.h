@@ -7,6 +7,7 @@
 #include "Core/GameObject/GameObject.h"
 #include "Core/GameObject/Camera/Camera.h"
 #include "Core/GameObject/Camera/EditorCamera.h"
+#include "Core/GameObject/Light/Light.h";
 
 class Scene {
 	friend class Editor;
@@ -18,12 +19,15 @@ private:
 	Camera* m_currentCamera;
 
 	EditorCamera* m_editorCamera;
+
+	Light* m_light;
 public:
 	std::string name;
 
 	Scene(std::string name);
 
 	void Init();
+	void ShadowPass();
 	void Update();
 
 	void Render();

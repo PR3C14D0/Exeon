@@ -26,6 +26,7 @@ public:
 	void AddScene(Scene* scene);
 
 	void Render();
+	void ShadowPass();
 
 	void LoadScene(std::string name);
 };

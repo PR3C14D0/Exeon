@@ -190,6 +190,31 @@ void Mesh::Update() {
 
 }
 
+void Mesh::ShadowPass(WVP wvp) {
+	this->UpdateConstantBuffer();
+
+	wvp.World = this->m_wvp.World;
+
+	UINT nWVPSize = (sizeof(wvp) + 255) & ~255;
+
+	PVOID pData;
+	ThrowIfFailed(this->m_wvpRes->Map(0, nullptr, &pData));
+	memcpy(pData, &wvp, nWVPSize);
+	this->m_wvpRes->Unmap(0, nullptr);
+
+	Descriptor wvpDesc = this->m_cbv_srvHeap->GetDescriptor(this->m_nWvpIndex);
+	this->m_list->SetGraphicsRootDescriptorTable(0, wvpDesc.gpuHandle);
+	int i = 0;
+	for (D3D12_VERTEX_BUFFER_VIEW vbv : this->m_VBVs) {
+		D3D12_INDEX_BUFFER_VIEW ibv = this->m_IBVs[i];
+		this->m_list->IASetVertexBuffers(0, 1, &vbv);
+		this->m_list->IASetIndexBuffer(&ibv);
+
+		this->m_list->DrawIndexedInstanced(this->m_indices[i].size(), 1, 0, 0, 0);
+		i++;
+	}
+}
+
 void Mesh::Render() {
 	this->UpdateConstantBuffer();
 	this->m_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -449,16 +474,16 @@ void Mesh::LoadModel(std::string filename) {
 			if (texture != nullptr) {
 				std::string name = std::string(texPath.C_Str());
 				taskPending++;
-				threads.emplace_back([=, &taskPending, this]() {
-					if (!texture) {
-						taskPending--;
-						return;
-					}
-					ComPtr<ID3D12Resource> resource;
-					resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, name, resource);
-					resource->SetName(L"Mesh Base color");
-					this->m_textures[i] = resource;
+				if (!texture) {
 					taskPending--;
+					return;
+				}
+				ComPtr<ID3D12Resource> resource;
+				resMgr->LoadTexture((BYTE*)texture->pcData, texture->mWidth, name, resource);
+				resource->SetName(L"Mesh Base color");
+				this->m_textures[i] = resource;
+				taskPending--;
+				threads.emplace_back([=, &taskPending, this]() {
 				});
 			}
 		}
@@ -478,6 +503,18 @@ void Mesh::LoadModel(std::string filename) {
 				this->m_ORMTextures[i] = resource;
 				taskPending--;
 			}
+		} else {
+			float metalness = 0.f;
+			float roughness = 0.f;
+			float ao = 1.f;
+			material->Get(AI_MATKEY_METALLIC_FACTOR, metalness);
+			material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
+
+			ComPtr<ID3D12Resource> resource;
+			// resMgr->LoadTextureFile("T_Black.png", resource);
+			resMgr->CreateTextureVec4(ao, roughness, metalness, 1.f, resource);
+			resource->SetName(L"Mesh Metallic Roughness");
+			this->m_ORMTextures[i] = resource;
 		}
 	}
 

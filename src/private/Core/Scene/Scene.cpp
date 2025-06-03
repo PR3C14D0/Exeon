@@ -2,13 +2,13 @@
 
 Scene::Scene(std::string name) {
 	this->name = name;
-	this->m_go = new GameObject("Sponza Atrium");
+	this->m_go = new GameObject("Bistro");
 }
 
 void Scene::Init() {
 	Mesh* m_mesh = new Mesh("StaticMeshComponent", &m_go->transform);
 	m_go->m_components.push_back(m_mesh);
-	m_mesh->LoadModel("Ch44.glb");
+	m_mesh->LoadModel("sanmiguel.glb");
 	this->AddGameObject(m_go);
 
 	this->m_editorCamera = new EditorCamera("EditorCamera");
@@ -16,10 +16,23 @@ void Scene::Init() {
 
 	this->SetCurrentCamera("EditorCamera");
 
+	this->m_light = new Light("Sample Light");
+	this->AddGameObject(this->m_light);
+
 	for (std::pair<std::string, GameObject*> object : this->m_gameObjects) {
 		object.second->Init();
 	}
-	m_go->transform.Rotate(Vector3(90.f, 0.f, 0.f));
+	// m_go->transform.Rotate(Vector3(90.f, 0.f, 0.f));
+}
+
+void Scene::ShadowPass() {
+	this->m_light->Render();
+	WVP wvp = this->m_light->m_wvp;
+	for (std::pair<std::string, GameObject*> object : this->m_gameObjects) {
+		/* Check if object is a Light, if it is, skip it. */
+		if (dynamic_cast<Light*>(object.second)) continue;
+		object.second->ShadowPass(wvp);
+	}
 }
 
 void Scene::Update() {
@@ -30,6 +43,8 @@ void Scene::Update() {
 
 void Scene::Render() {
 	for (std::pair<std::string, GameObject*> object : this->m_gameObjects) {
+		/* Check if object is a Light, if it is, skip it. */
+		if (dynamic_cast<Light*>(object.second)) continue;
 		object.second->Render();
 	}
 }
@@ -38,8 +53,7 @@ bool Scene::ObjectExists(std::string name) {
 	if (this->m_gameObjects.size() > 0) {
 		if (this->m_gameObjects.count(name) > 0)
 			return true;
-		else
-			spdlog::error("Scene#{0}: GameObject {1} not found in the scene.", this->name, name);
+		spdlog::error("Scene#{0}: GameObject {1} not found in the scene.", this->name, name);
 	}
 	else {
 		spdlog::error("Scene#{0}: No GameObjects added on the Scene.", this->name);
@@ -52,8 +66,7 @@ bool Scene::CameraExists(std::string name) {
 	if (this->m_cameras.size() > 0) {
 		if (this->m_cameras.count(name) > 0)
 			return true;
-		else
-			spdlog::error("Scene#{0}: Camera {1} not found in the scene.", this->name, name);
+		spdlog::error("Scene#{0}: Camera {1} not found in the scene.", this->name, name);
 	}
 	else {
 		spdlog::error("Scene#{0}: No Cameras added on the Scene.", this->name);

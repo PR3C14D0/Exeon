@@ -25,6 +25,14 @@ Component* GameObject::GetComponent(std::string name) {
 	return nullptr;
 }
 
+void GameObject::ShadowPass(WVP wvp) {
+	for (Component* component : this->m_components) {
+		if (Mesh* mesh = dynamic_cast<Mesh*>(component)) {
+			mesh->ShadowPass(wvp);
+		}
+	}
+}
+
 void GameObject::Render() {
 	for (Component* component : this->m_components) {
 		if (Mesh* mesh = dynamic_cast<Mesh*>(component)) {

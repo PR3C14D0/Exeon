@@ -19,7 +19,7 @@ VertexOutput VertexMain(float4 position : POSITION)
     return output;
 }
 
-void PixelMain(VertexOutput input)
+float4 PixelMain(VertexOutput input) : SV_Target
 {
-    return;
+    return float4(0, 0, 0, 0);
 }

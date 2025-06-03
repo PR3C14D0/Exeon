@@ -25,6 +25,12 @@ private:
     ComPtr<ID3D12Resource> m_depth;
     UINT m_nDepthIndex;
 
+    ComPtr<ID3D12RootSignature> m_rootSig;
+    ComPtr<ID3D12PipelineState> m_plState;
+
+    ComPtr<ID3D12Device1> m_dev;
+    ComPtr<ID3D12GraphicsCommandList> m_list;
+
     void InitConstantBuffers(D3D12* renderer);
     void InitPipeline(D3D12* renderer);
 

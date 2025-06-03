@@ -56,6 +56,10 @@ void SceneManager::Render() {
 	this->m_actualScene->Render();
 }
 
+void SceneManager::ShadowPass() {
+	this->m_actualScene->ShadowPass();
+}
+
 SceneManager* SceneManager::GetInstance() {
 	if (SceneManager::m_instance == nullptr)
 		SceneManager::m_instance = new SceneManager();

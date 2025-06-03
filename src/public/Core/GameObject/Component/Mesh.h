@@ -83,9 +83,10 @@ private:
 public:
 	Mesh(std::string name, Transform* parentTransform);
 
-	void Init();
-	void Update();
+	void Init() override;
+	void Update() override;
 
+	void ShadowPass(WVP wvp);
 	void Render();
 
 	void LoadModel(std::string filename);

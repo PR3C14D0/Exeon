@@ -15,6 +15,9 @@ void Light::Init() {
     GameObject::Init();
 
     if (D3D12* renderer = reinterpret_cast<D3D12*>(this->m_renderer)) {
+        renderer->GetDevice(this->m_dev);
+        renderer->GetCommandList(this->m_list);
+
         this->InitConstantBuffers(renderer);
 
         this->m_shader = new Shader("ShadowPass.hlsl", "VertexMain", "PixelMain");
@@ -39,7 +42,7 @@ void Light::Init() {
         dsvClear.DepthStencil.Depth = 1.f;
         dsvClear.DepthStencil.Stencil = 0.f;
 
-        ThrowIfFailed(renderer->m_dev->CreateCommittedResource(
+        ThrowIfFailed(this->m_dev->CreateCommittedResource(
             &heapProps,
             D3D12_HEAP_FLAG_NONE,
             &depthBuffDesc,
@@ -57,7 +60,9 @@ void Light::Init() {
 
         Descriptor descriptor = renderer->m_dsvHeap->GetDescriptor(this->m_nDepthIndex);
 
-        renderer->m_dev->CreateDepthStencilView(this->m_depth.Get(), &dsvDesc, descriptor.cpuHandle);
+        this->m_dev->CreateDepthStencilView(this->m_depth.Get(), &dsvDesc, descriptor.cpuHandle);
+
+        this->InitPipeline(renderer);
     }
 
 }
@@ -67,8 +72,62 @@ void Light::InitPipeline(D3D12* renderer) {
     wvpRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 
     CD3DX12_ROOT_PARAMETER wvpParam;
-    wvpParam.InitAsConstantBufferView(0, D3D12_SHADER_VISIBILITY_VERTEX);
+    wvpParam.InitAsDescriptorTable(1, &wvpRange, D3D12_SHADER_VISIBILITY_VERTEX);
 
+    D3D12_ROOT_PARAMETER rootParams[] = {
+        wvpParam
+    };
+
+    D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
+    rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    rootDesc.NumParameters = _countof(rootParams);
+    rootDesc.pParameters = rootParams;
+    rootDesc.NumStaticSamplers = 0;
+    rootDesc.pStaticSamplers = nullptr;
+
+    ComPtr<ID3DBlob> rootBlob, errBlob;
+    ThrowIfFailed(D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, rootBlob.GetAddressOf(), errBlob.GetAddressOf()));
+
+    if (errBlob) {
+        spdlog::error("Light: Root signature error {0}", errBlob->GetBufferPointer());
+        return;
+    }
+
+    ThrowIfFailed(this->m_dev->CreateRootSignature(0, rootBlob->GetBufferPointer(), rootBlob->GetBufferSize(), IID_PPV_ARGS(this->m_rootSig.GetAddressOf())));
+
+    D3D12_INPUT_ELEMENT_DESC elements[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, NULL }
+    };
+
+    LPVOID lpVertex = nullptr;
+    UINT nVertexSize = this->m_shader->GetBuffer(SHADER_BUFFER::VERTEX, lpVertex);
+
+    D3D12_INPUT_LAYOUT_DESC layout = { };
+    layout.pInputElementDescs = elements;
+    layout.NumElements = _countof(elements);
+
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC plDesc = { };
+    plDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+    plDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+    plDesc.DepthStencilState.DepthEnable = TRUE;
+    plDesc.DepthStencilState.StencilEnable = FALSE;
+    plDesc.InputLayout = layout;
+    plDesc.VS.pShaderBytecode = lpVertex;
+    plDesc.VS.BytecodeLength = nVertexSize;
+    // plDesc.PS.pShaderBytecode = lpPixel;
+    // plDesc.PS.BytecodeLength = nPixelSize;
+    plDesc.pRootSignature = this->m_rootSig.Get();
+    plDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+    plDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    plDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    plDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+    plDesc.RasterizerState.FrontCounterClockwise = FALSE;
+    plDesc.NumRenderTargets = 0;
+    plDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    plDesc.SampleDesc.Count = 8;
+    plDesc.SampleMask = UINT32_MAX;
+
+    ThrowIfFailed(this->m_dev->CreateGraphicsPipelineState(&plDesc, IID_PPV_ARGS(this->m_plState.GetAddressOf())));
 }
 
 void Light::InitConstantBuffers(D3D12* renderer) {
@@ -104,9 +163,18 @@ void Light::InitConstantBuffers(D3D12* renderer) {
 
 void Light::Update() {
     GameObject::Update();
-    this->InitConstantBuffers(dynamic_cast<D3D12*>(this->m_renderer));
 }
 
 void Light::Render() {
+    this->InitConstantBuffers(dynamic_cast<D3D12*>(this->m_renderer));
+
+    if (D3D12* renderer = dynamic_cast<D3D12*>(this->m_renderer)) {
+        Descriptor dsvDesc = renderer->m_dsvHeap->GetDescriptor(this->m_nDepthIndex);
+        this->m_list->ClearDepthStencilView(dsvDesc.cpuHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0.f, 0, nullptr);
+        this->m_list->OMSetRenderTargets(0, nullptr, FALSE, &dsvDesc.cpuHandle);
+        this->m_list->SetPipelineState(this->m_plState.Get());
+        this->m_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        this->m_list->SetGraphicsRootSignature(this->m_rootSig.Get());
+    }
 
 }
