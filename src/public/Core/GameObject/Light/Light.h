@@ -26,6 +26,7 @@ private:
     UINT m_nDepthIndex;
 
     void InitConstantBuffers(D3D12* renderer);
+    void InitPipeline(D3D12* renderer);
 
     Shader* m_shader;
 public:
@@ -38,4 +39,5 @@ public:
 
     void Init() override;
     void Update() override;
+    void Render() override;
 };
