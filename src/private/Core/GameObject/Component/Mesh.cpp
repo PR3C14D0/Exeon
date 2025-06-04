@@ -18,6 +18,7 @@ Mesh::Mesh(std::string name, Transform* parentTransform) : Component::Component(
 	this->m_nTotalVertices = 0;
 	this->m_nSamplerIndex = -1; // I put -1 cuz 0 can actually be occupied.
 	this->m_nWvpIndex = -1;
+	this->m_nLightIndex = -1;
 	this->m_nTotalVertices = 0;
 	this->m_shader = nullptr;
 
@@ -121,20 +122,36 @@ void Mesh::UploadVertices() {
 void Mesh::InitConstantBuffer() {
 	D3D12* d3d12 = dynamic_cast<D3D12*>(this->m_renderer);
 
+
+	WVP lightWvp = { };
+	lightWvp.World = XMMatrixIdentity();
+	lightWvp.View = XMMatrixIdentity();
+	lightWvp.Projection = XMMatrixIdentity();
+
 	UINT nWVPSize = (sizeof(this->m_wvp) + 255) & ~255;
+	UINT nLightSize = (sizeof(lightWvp) + 255) & ~255;
 
 	d3d12->CreateBuffer(&this->m_wvp, nWVPSize, this->m_wvpRes);
+	d3d12->CreateBuffer(&lightWvp, nLightSize, this->m_lightBuff);
 	this->m_wvpRes->SetName(L"Mesh WVP Constant buffer");
+	this->m_lightBuff->SetName(L"Light WVP Constant Buffer");
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = { };
 	cbvDesc.BufferLocation = this->m_wvpRes->GetGPUVirtualAddress();
 	cbvDesc.SizeInBytes = nWVPSize;
 
-	this->m_cbv_srvHeap->Allocate(1);
-	this->m_nWvpIndex = this->m_cbv_srvHeap->GetLastDescriptorIndex();
+	D3D12_CONSTANT_BUFFER_VIEW_DESC lightCbvDesc = { };
+	lightCbvDesc.BufferLocation = this->m_lightBuff->GetGPUVirtualAddress();
+	lightCbvDesc.SizeInBytes = nLightSize;
+
+	this->m_cbv_srvHeap->Allocate(2);
+	this->m_nWvpIndex = this->m_cbv_srvHeap->GetLastDescriptorIndex() - 1;
+	this->m_nLightIndex = this->m_cbv_srvHeap->GetLastDescriptorIndex();
 	Descriptor wvpDesc = this->m_cbv_srvHeap->GetDescriptor(this->m_nWvpIndex);
+	Descriptor lightDesc = this->m_cbv_srvHeap->GetDescriptor(this->m_nLightIndex);
 
 	this->m_dev->CreateConstantBufferView(&cbvDesc, wvpDesc.cpuHandle);
+	this->m_dev->CreateConstantBufferView(&lightCbvDesc, lightDesc.cpuHandle);
 }
 
 void Mesh::UpdateConstantBuffer() {
@@ -191,18 +208,28 @@ void Mesh::Update() {
 }
 
 void Mesh::ShadowPass(WVP wvp) {
-	this->UpdateConstantBuffer();
+	// if (!this->IsVisibleFromCamera()) return;
+	wvp.World = XMMatrixIdentity();
 
-	wvp.World = this->m_wvp.World;
+	wvp.World *= (XMMatrixScaling(this->m_transform->scale.x, this->m_transform->scale.y, this->m_transform->scale.z));
+	wvp.World *= (XMMatrixRotationX(XMConvertToRadians(this->m_transform->rotation.x)));
+	wvp.World *= (XMMatrixRotationY(XMConvertToRadians(this->m_transform->rotation.y)));
+	wvp.World *= (XMMatrixRotationZ(XMConvertToRadians(this->m_transform->rotation.z)));
+	wvp.World *= (XMMatrixTranslation(
+		this->m_transform->location.x,
+		this->m_transform->location.y,
+		this->m_transform->location.z));
+
+	wvp.World = XMMatrixTranspose(wvp.World);
 
 	UINT nWVPSize = (sizeof(wvp) + 255) & ~255;
 
 	PVOID pData;
-	ThrowIfFailed(this->m_wvpRes->Map(0, nullptr, &pData));
+	ThrowIfFailed(this->m_lightBuff->Map(0, nullptr, &pData));
 	memcpy(pData, &wvp, nWVPSize);
-	this->m_wvpRes->Unmap(0, nullptr);
+	this->m_lightBuff->Unmap(0, nullptr);
 
-	Descriptor wvpDesc = this->m_cbv_srvHeap->GetDescriptor(this->m_nWvpIndex);
+	Descriptor wvpDesc = this->m_cbv_srvHeap->GetDescriptor(this->m_nLightIndex);
 	this->m_list->SetGraphicsRootDescriptorTable(0, wvpDesc.gpuHandle);
 	int i = 0;
 	for (D3D12_VERTEX_BUFFER_VIEW vbv : this->m_VBVs) {
@@ -517,6 +544,7 @@ void Mesh::LoadModel(std::string filename) {
 			this->m_ORMTextures[i] = resource;
 		}
 	}
+
 
 	for (std::thread& t : threads) {
 		if (t.joinable()) t.join();

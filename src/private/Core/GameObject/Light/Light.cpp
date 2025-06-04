@@ -13,6 +13,7 @@ Light::Light(std::string name) : GameObject::GameObject(name) {
 
 void Light::Init() {
     GameObject::Init();
+    this->transform.Translate(1.f, 1.f, 0.f);
 
     if (D3D12* renderer = reinterpret_cast<D3D12*>(this->m_renderer)) {
         renderer->GetDevice(this->m_dev);
@@ -152,8 +153,8 @@ void Light::InitConstantBuffers(D3D12* renderer) {
     XMVECTOR at = XMVectorAdd(eye, forward);
 
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    this->m_lightBuffer.View = XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up));
-    this->m_lightBuffer.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(
+    this->m_wvp.View = XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up));
+    this->m_wvp.Projection = XMMatrixTranspose(XMMatrixPerspectiveFovLH(
             XMConvertToRadians(70.f),
             static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
             0.001f,

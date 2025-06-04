@@ -69,8 +69,10 @@ private:
 	UINT m_nTotalVertices;
 
 	ComPtr<ID3D12Resource> m_wvpRes;
+	ComPtr<ID3D12Resource> m_lightBuff;
 	WVP m_wvp;
 	UINT m_nWvpIndex;
+	UINT m_nLightIndex;
 	void InitConstantBuffer();
 	void UpdateConstantBuffer();
 
@@ -80,6 +82,7 @@ private:
 
 	Transform* m_transform;
 	SceneManager* m_sceneMgr;
+
 public:
 	Mesh(std::string name, Transform* parentTransform);
 
