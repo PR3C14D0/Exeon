@@ -10,8 +10,8 @@ using namespace Microsoft::WRL;
 using namespace DirectX;
 
 struct LightBuffer {
-    XMMATRIX View;
-    XMMATRIX Projection;
+    XMFLOAT3 Position;
+    float padding = 0.f;
     XMFLOAT4 LightColor;
 };
 

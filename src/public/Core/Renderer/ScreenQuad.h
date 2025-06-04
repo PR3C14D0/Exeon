@@ -71,6 +71,9 @@ private:
 	Shader* m_shader;
 	Shader* m_skyboxShader;
 
+	ComPtr<ID3D12Resource> m_lightBuffer;
+	UINT m_nLightIndex;
+
 	ResourceManager* m_resMgr;
 	std::vector<ComPtr<ID3D12Resource>> m_skyboxTex;
 	std::vector<UINT> m_skyboxIndices;

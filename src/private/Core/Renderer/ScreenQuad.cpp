@@ -151,27 +151,15 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	CD3DX12_DESCRIPTOR_RANGE depthRange;
 	CD3DX12_DESCRIPTOR_RANGE ORMRange;
 	CD3DX12_DESCRIPTOR_RANGE cbuffRange;
-	CD3DX12_DESCRIPTOR_RANGE frontRange;
-	CD3DX12_DESCRIPTOR_RANGE backRange;
-	CD3DX12_DESCRIPTOR_RANGE leftRange;
-	CD3DX12_DESCRIPTOR_RANGE rightRange;
-	CD3DX12_DESCRIPTOR_RANGE topRange;
-	CD3DX12_DESCRIPTOR_RANGE bottomRange;
-	CD3DX12_DESCRIPTOR_RANGE cbvRange;
 	CD3DX12_DESCRIPTOR_RANGE samplerRange;
+	CD3DX12_DESCRIPTOR_RANGE lightRange;
 	albedoRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	normalRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 	depthRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
 	ORMRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
-	cbuffRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	lightRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
 
-	frontRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
-	backRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
-	leftRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6);
-	rightRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 7);
-	topRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 8);
-	bottomRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 9);
-	cbvRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	cbuffRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	samplerRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
 	
 	CD3DX12_ROOT_PARAMETER albedoParam;
@@ -179,27 +167,15 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 	CD3DX12_ROOT_PARAMETER depthParam;
 	CD3DX12_ROOT_PARAMETER ORMParam;
 	CD3DX12_ROOT_PARAMETER cbuffParam;
-	CD3DX12_ROOT_PARAMETER frontParam;
-	CD3DX12_ROOT_PARAMETER backParam;
-	CD3DX12_ROOT_PARAMETER leftParam;
-	CD3DX12_ROOT_PARAMETER rightParam;
-	CD3DX12_ROOT_PARAMETER topParam;
-	CD3DX12_ROOT_PARAMETER bottomParam;
-	CD3DX12_ROOT_PARAMETER cbvParam;
 	CD3DX12_ROOT_PARAMETER samplerParam;
+	CD3DX12_ROOT_PARAMETER lightParam;
 	albedoParam.InitAsDescriptorTable(1, &albedoRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	normalParam.InitAsDescriptorTable(1, &normalRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	depthParam.InitAsDescriptorTable(1, &depthRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	ORMParam.InitAsDescriptorTable(1, &ORMRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	cbuffParam.InitAsDescriptorTable(1, &cbuffRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	
-	frontParam.InitAsDescriptorTable(1, &frontRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	backParam.InitAsDescriptorTable(1, &backRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	leftParam.InitAsDescriptorTable(1, &leftRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	rightParam.InitAsDescriptorTable(1, &rightRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	topParam.InitAsDescriptorTable(1, &topRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	bottomParam.InitAsDescriptorTable(1, &bottomRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	samplerParam.InitAsDescriptorTable(1, &samplerRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	lightParam.InitAsDescriptorTable(1, &lightRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	D3D12_ROOT_PARAMETER rootParams[] = {
 		albedoParam,
@@ -207,13 +183,8 @@ void ScreenQuad::D3D12Init(D3D12* renderer) {
 		depthParam,
 		ORMParam,
 		cbuffParam,
-		frontParam,
-		backParam,
-		leftParam,
-		rightParam,
-		topParam,
-		bottomParam,
-		samplerParam
+		samplerParam,
+		lightParam
 	};
 
 	D3D12_ROOT_SIGNATURE_DESC rootDesc = { };
@@ -327,15 +298,40 @@ void ScreenQuad::InitConstantBuffer() {
 
 		renderer->CreateBuffer(&this->m_sqCBuffData, nConstantBufferSize, m_sqCBuffer);
 
-		this->m_nSqCBuffIndex = renderer->m_cbvSrvHeap->GetLastDescriptorIndex() + 1;
-		renderer->m_cbvSrvHeap->Allocate(1);
+		renderer->m_cbvSrvHeap->Allocate(2);
+		this->m_nSqCBuffIndex = renderer->m_cbvSrvHeap->GetLastDescriptorIndex() - 1;
+		this->m_nLightIndex = renderer->m_cbvSrvHeap->GetLastDescriptorIndex();
 		Descriptor sqBuffDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_nSqCBuffIndex);
+		Descriptor lightDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_nLightIndex);
 
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = { };
 		cbvDesc.BufferLocation = this->m_sqCBuffer->GetGPUVirtualAddress();
 		cbvDesc.SizeInBytes = nConstantBufferSize;
 
 		this->m_dev->CreateConstantBufferView(&cbvDesc, sqBuffDesc.cpuHandle);
+
+		Scene* scene = m_sceneMgr->GetCurrentScene();
+		std::vector<Light*> lights = scene->GetLights();
+
+		std::vector<LightBuffer> lightArray;
+		for (Light* light : lights) {
+			lightArray.push_back(light->m_lightBuffer);
+		}
+
+		UINT nLightSize = sizeof(LightBuffer) * lightArray.size();
+
+		renderer->CreateBuffer(lightArray.data(), nLightSize, this->m_lightBuffer);
+		this->m_lightBuffer->SetName(L"Light Array Buffer");
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+		srvDesc.Buffer.NumElements = lightArray.size();
+		srvDesc.Buffer.StructureByteStride = sizeof(LightBuffer);
+		srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+		renderer->m_dev->CreateShaderResourceView(this->m_lightBuffer.Get(), &srvDesc, lightDesc.cpuHandle);
 	}
 }
 
@@ -390,6 +386,21 @@ void ScreenQuad::UpdateConstantBuffer() {
 		ThrowIfFailed(this->m_sqCBuffer->Map(0, nullptr, &pData));
 		memcpy(pData, &this->m_sqCBuffData, nConstantBufferSize);
 		this->m_sqCBuffer->Unmap(0, nullptr);
+
+		Scene* scene = m_sceneMgr->GetCurrentScene();
+		std::vector<Light*> lights = scene->GetLights();
+
+		std::vector<LightBuffer> lightArray;
+		for (Light* light : lights) {
+			lightArray.push_back(light->m_lightBuffer);
+		}
+
+		UINT nLightSize = sizeof(LightBuffer) * lightArray.size();
+
+		pData = nullptr;
+		ThrowIfFailed(this->m_lightBuffer->Map(0, nullptr, &pData));
+		memcpy(pData, lightArray.data(), nLightSize);
+		this->m_lightBuffer->Unmap(0, nullptr);
 	}
 }
 
@@ -400,13 +411,8 @@ void ScreenQuad::D3D12Render(D3D12* renderer) {
 	Descriptor depthParam = renderer->m_cbvSrvHeap->GetDescriptor(2);
 	Descriptor materialDesc = renderer->m_cbvSrvHeap->GetDescriptor(3);
 	Descriptor sqBuffDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_nSqCBuffIndex);
-	Descriptor sbFrontDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_skyboxIndices[0]);
-	Descriptor sbBackDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_skyboxIndices[1]);
-	Descriptor sbLeftDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_skyboxIndices[2]);
-	Descriptor sbRightDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_skyboxIndices[3]);
-	Descriptor sbTopDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_skyboxIndices[4]);
-	Descriptor sbBottomDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_skyboxIndices[5]);
 	Descriptor samplerDesc = renderer->m_samplerHeap->GetDescriptor(this->m_nSamplerIndex);
+	Descriptor lightDesc = renderer->m_cbvSrvHeap->GetDescriptor(this->m_nLightIndex);
 
 	this->m_list->OMSetRenderTargets(1, &this->m_rtvDescriptor.cpuHandle, FALSE, nullptr);
 	this->m_list->SetPipelineState(this->m_plState.Get());
@@ -422,13 +428,8 @@ void ScreenQuad::D3D12Render(D3D12* renderer) {
 	this->m_list->SetGraphicsRootDescriptorTable(2, depthParam.gpuHandle);
 	this->m_list->SetGraphicsRootDescriptorTable(3, materialDesc.gpuHandle);
 	this->m_list->SetGraphicsRootDescriptorTable(4, sqBuffDesc.gpuHandle);
-	this->m_list->SetGraphicsRootDescriptorTable(5, sbFrontDesc.gpuHandle);
-	this->m_list->SetGraphicsRootDescriptorTable(6, sbBackDesc.gpuHandle);
-	this->m_list->SetGraphicsRootDescriptorTable(7, sbLeftDesc.gpuHandle);
-	this->m_list->SetGraphicsRootDescriptorTable(8, sbRightDesc.gpuHandle);
-	this->m_list->SetGraphicsRootDescriptorTable(9, sbTopDesc.gpuHandle);
-	this->m_list->SetGraphicsRootDescriptorTable(10, sbBottomDesc.gpuHandle);
-	this->m_list->SetGraphicsRootDescriptorTable(11, samplerDesc.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(5, samplerDesc.gpuHandle);
+	this->m_list->SetGraphicsRootDescriptorTable(6, lightDesc.gpuHandle);
 
 	this->m_list->DrawIndexedInstanced(this->m_indices.size(), 1, 0, 0, 0);
 }

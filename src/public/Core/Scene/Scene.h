@@ -16,11 +16,10 @@ private:
 
 	std::map<std::string, GameObject*> m_gameObjects;
 	std::map<std::string, Camera*> m_cameras;
+	std::map<std::string, Light*> m_lights;
 	Camera* m_currentCamera;
 
 	EditorCamera* m_editorCamera;
-
-	Light* m_light;
 public:
 	std::string name;
 
@@ -36,6 +35,8 @@ public:
 	Camera* GetCurrentCamera();
 
 	GameObject* GetObject(std::string name);
+
+	std::vector<Light*> GetLights();
 
 	void AddGameObject(GameObject* object);
 	bool ObjectExists(std::string name);

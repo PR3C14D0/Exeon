@@ -159,6 +159,15 @@ void Light::InitConstantBuffers(D3D12* renderer) {
             static_cast<float>(renderer->m_nWidth) / static_cast<float>(renderer->m_nHeight),
             0.001f,
             3000.f));
+
+    this->m_lightBuffer.Position.x = this->transform.location.x;
+    this->m_lightBuffer.Position.y = this->transform.location.y;
+    this->m_lightBuffer.Position.z = this->transform.location.z;
+
+    this->m_lightBuffer.LightColor.x = 100.f;
+    this->m_lightBuffer.LightColor.y = 100.f;
+    this->m_lightBuffer.LightColor.z = 100.f;
+    this->m_lightBuffer.LightColor.w = 1.f;
 }
 
 

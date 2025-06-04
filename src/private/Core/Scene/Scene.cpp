@@ -8,7 +8,7 @@ Scene::Scene(std::string name) {
 void Scene::Init() {
 	Mesh* m_mesh = new Mesh("StaticMeshComponent", &m_go->transform);
 	m_go->m_components.push_back(m_mesh);
-	m_mesh->LoadModel("sanmiguel.glb");
+	m_mesh->LoadModel("DamagedHelmet.glb");
 	this->AddGameObject(m_go);
 
 	this->m_editorCamera = new EditorCamera("EditorCamera");
@@ -16,8 +16,8 @@ void Scene::Init() {
 
 	this->SetCurrentCamera("EditorCamera");
 
-	this->m_light = new Light("Sample Light");
-	this->AddGameObject(this->m_light);
+	Light* sampleLight = new Light("Sample Light");
+	this->AddGameObject(sampleLight);
 
 	for (std::pair<std::string, GameObject*> object : this->m_gameObjects) {
 		object.second->Init();
@@ -26,12 +26,16 @@ void Scene::Init() {
 }
 
 void Scene::ShadowPass() {
-	this->m_light->Render();
-	WVP wvp = this->m_light->m_wvp;
-	for (std::pair<std::string, GameObject*> object : this->m_gameObjects) {
-		/* Check if object is a Light, if it is, skip it. */
-		if (dynamic_cast<Light*>(object.second)) continue;
-		object.second->ShadowPass(wvp);
+	std::vector<Light*> lights = this->GetLights();
+
+	for (Light* light : lights) {
+		light->Render();
+		WVP wvp = light->m_wvp;
+		for (std::pair<std::string, GameObject*> object : this->m_gameObjects) {
+			/* Check if object is a Light, if it is, skip it. */
+			if (dynamic_cast<Light*>(object.second)) continue;
+			object.second->ShadowPass(wvp);
+		}
 	}
 }
 
@@ -96,6 +100,16 @@ GameObject* Scene::GetObject(std::string name) {
 	return this->m_gameObjects[name];
 }
 
+std::vector<Light *> Scene::GetLights() {
+	std::vector<Light*> lights;
+
+	for (std::pair<std::string, Light*> light : this->m_lights) {
+		lights.push_back(light.second);
+	}
+
+	return lights;
+}
+
 
 void Scene::AddGameObject(GameObject* object) {
 	if (!object)
@@ -108,6 +122,9 @@ void Scene::AddGameObject(GameObject* object) {
 
 	if (Camera* cam = dynamic_cast<Camera*>(object))
 		this->m_cameras[object->m_name] = cam;
+
+	if (Light* light = dynamic_cast<Light*>(object))
+		this->m_lights[object->m_name] = light;
 
 	this->m_gameObjects[object->m_name] = object;
 }

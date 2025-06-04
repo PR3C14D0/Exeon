@@ -7,6 +7,14 @@ cbuffer ScreenQuadBuffer : register(b0)
     float2 screenSize;
 }
 
+struct LightData {
+    float3 position;
+    float padding;
+    float4 color;
+};
+
+StructuredBuffer<LightData> Lights : register(t4);
+
 struct VertexOutput
 {
     float4 position : SV_Position;
@@ -25,13 +33,6 @@ Texture2DMS<float4> albedo : register(t0);
 Texture2DMS<float4> normal : register(t1);
 Texture2DMS<float4> depthTex : register(t2);
 Texture2DMS<float4> orm : register(t3);
-
-Texture2D frontTex : register(t4);
-Texture2D backTex : register(t5);
-Texture2D leftTex : register(t6);
-Texture2D rightTex : register(t7);
-Texture2D topTex : register(t8);
-Texture2D bottomTex : register(t9);
 
 SamplerState skyboxSampler : register(s0);
 
@@ -126,41 +127,9 @@ PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {   
     float depth = depthTex.Load(input.position.xy, index).r;
     float3 color = float3(0.f, 0.f, 0.f);
-    //if (depth >= 1.f)
-    //{
-    //    // Obtener las coordenadas UV del p�xel
-    //    float2 uv = input.position.xy;
 
-    //    // Calcular la direcci�n del rayo desde la c�mara usando las UVs
-    //    float3 rayDirection = ViewDirectionFromUV(uv);
-
-    //    // Elegir un plano para intersectar con el rayo (por ejemplo, el plano Z = 0)
-    //    float t = -cameraPos.z / rayDirection.z; // Intersecci�n con el plano Z = 0
-
-    //    // Obtener las coordenadas en el mundo para el punto de intersecci�n
-    //    float3 worldPos = cameraPos + t * rayDirection;
-
-    //    // Ajustar la escala de la cuadr�cula (puedes modificar esta escala)
-    //    float scale = 10.0f; // Ajusta la escala de la cuadr�cula
-
-    //    // Obtener la m�scara de la cuadr�cula
-    //    float gridMaskValue = GridMask(worldPos, scale);
-
-    //    // Asignar el color de la cuadr�cula (blanco para las l�neas)
-    //    color = float3(gridMaskValue, gridMaskValue, gridMaskValue);
-
-    //    // Crear la salida del p�xel para la cuadr�cula
-    //    PixelOutput gridOut;
-    //    gridOut.screen = float4(color.x, color.y, color.z, 1.f);
-        
-    //    // Retornar el color de la cuadr�cula
-    //    return gridOut;
-    //}
-
-
-    
-    float3 lightPos = float3(0.f, 1.f, -2.f);
-    float3 lightColor = float3(100.f, 100.f, 100.f);
+    float3 lightPos = Lights[0].position.rgb;
+    float3 lightColor = Lights[0].color.rgb;
     
     int2 pixelCoord = int2(input.position.xy);
 
