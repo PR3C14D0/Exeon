@@ -3,8 +3,8 @@ cbuffer ScreenQuadBuffer : register(b0)
 {
     matrix InverseView;
     matrix InverseProjection;
-    float3 cameraPos;
-    float2 screenSize;
+    float4 cameraPos;
+    float4 screenInfo;
 }
 
 struct LightData {
@@ -84,6 +84,7 @@ float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
 float3 ReconstructPosition(int2 pixelCoord, uint index)
 {
     float depth = depthTex.Load(pixelCoord, index).r;
+    float2 screenSize = float2(screenInfo.x, screenInfo.y);
 
     float2 ndc = (float2(pixelCoord) / screenSize) * 2.0f - 1.0f;
     ndc.y *= -1.0f;
@@ -127,9 +128,7 @@ PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
 {   
     float depth = depthTex.Load(input.position.xy, index).r;
     float3 color = float3(0.f, 0.f, 0.f);
-
-    float3 lightPos = Lights[0].position.rgb;
-    float3 lightColor = Lights[0].color.rgb;
+    
     
     int2 pixelCoord = int2(input.position.xy);
 
@@ -141,34 +140,42 @@ PixelOutput PixelMain(VertexOutput input, uint index : SV_SampleIndex)
     float ao = ormData.r;
     float roughness = ormData.g;
     float metallic = ormData.b;
+    uint numLights = screenInfo.z;
 
-    float3 V = normalize(cameraPos - pos);
-    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedoColor, metallic);
+    for (uint i = 0; i < numLights; i++)
+    {
+        float3 lightPos = Lights[i].position.rgb;
+        float3 lightColor = Lights[i].color.rgb;
 
-    float3 L = normalize(lightPos - pos);
-    float3 H = normalize(V + L);
-    float distance = length(lightPos - pos);
-    float attenuation = 1.0f / (distance * distance + 1.f);
-    float3 radiance = lightColor * attenuation;
-    radiance *= (1.0 + metallic * 0.2);
+        float3 V = normalize(cameraPos.xyz - pos);
+        float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedoColor, metallic);
 
-    float NDF = DistributionGGX(N, H, roughness);
-    float G = GeometrySmith(N, V, L, roughness);
-    float3 F = FresnelShlick(saturate(dot(H, V)), F0);
+        float3 L = normalize(lightPos - pos);
+        float3 H = normalize(V + L);
+        float distance = length(lightPos - pos);
+        float attenuation = 1.0f / (distance * distance + 1.f);
+        float3 radiance = lightColor * attenuation;
+        radiance *= (1.0 + metallic * 0.2);
 
-    float3 kS = F;
-    float3 kD = (1.0 - kS) * (1.0 - metallic);
+        float NDF = DistributionGGX(N, H, roughness);
+        float G = GeometrySmith(N, V, L, roughness);
+        float3 F = FresnelShlick(saturate(dot(H, V)), F0);
 
-    float3 numerator = NDF * G * F;
-    float denominator = 4.f * max(dot(N, V), 0.f) * max(dot(N, L), 0.f) + 0.0001f;
-    float3 specular = numerator / denominator;
+        float3 kS = F;
+        float3 kD = (1.0 - kS) * (1.0 - metallic);
 
-    float NdotL = max(dot(N, L), 0.f);
-    float3 Lo = (kD * albedoColor / PI + specular) * radiance * NdotL;
+        float3 numerator = NDF * G * F;
+        float denominator = 4.f * max(dot(N, V), 0.f) * max(dot(N, L), 0.f) + 0.0001f;
+        float3 specular = numerator / denominator;
 
+        float NdotL = max(dot(N, L), 0.f);
+        float3 Lo = (kD * albedoColor / PI + specular) * radiance * NdotL;
+
+        color += Lo;
+    }
+    
     float3 ambient = 0.1f * albedoColor * ao;
-
-    color = ambient + Lo;
+    color += ambient;
     
     /* Tonemap */
     color = color / (color + 1.0);

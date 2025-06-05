@@ -251,7 +251,8 @@ void ScreenQuad::Render() {
 
 void ScreenQuad::InitConstantBuffer() {
 	if (D3D12* renderer = dynamic_cast<D3D12*>(this->m_renderer)) {
-		Camera* currentCamera = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera();
+		Scene* scene = m_sceneMgr->GetCurrentScene();
+		Camera* currentCamera = scene->GetCurrentCamera();
 
 		Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
 		XMVECTOR eye = XMVectorSet(
@@ -288,11 +289,18 @@ void ScreenQuad::InitConstantBuffer() {
 		this->m_sqCBuffData.InverseProjection = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseProjection);
 
 
-		this->m_sqCBuffData.cameraPosition = XMFLOAT3(
+		this->m_sqCBuffData.cameraPosition = XMFLOAT4(
 			currentCamera->transform.location.x,
 			currentCamera->transform.location.y,
-			currentCamera->transform.location.z
+			currentCamera->transform.location.z,
+			0.f
 		);
+
+		std::vector<Light*> lights = scene->GetLights();
+		this->m_sqCBuffData.screenInfo.x = renderer->m_nWidth;
+		this->m_sqCBuffData.screenInfo.y = renderer->m_nHeight;
+		this->m_sqCBuffData.screenInfo.z = lights.size();
+		this->m_sqCBuffData.screenInfo.w = 0.f;
 
 		UINT nConstantBufferSize = (sizeof(this->m_sqCBuffData) + 255) & ~255;
 
@@ -309,9 +317,6 @@ void ScreenQuad::InitConstantBuffer() {
 		cbvDesc.SizeInBytes = nConstantBufferSize;
 
 		this->m_dev->CreateConstantBufferView(&cbvDesc, sqBuffDesc.cpuHandle);
-
-		Scene* scene = m_sceneMgr->GetCurrentScene();
-		std::vector<Light*> lights = scene->GetLights();
 
 		std::vector<LightBuffer> lightArray;
 		for (Light* light : lights) {
@@ -337,7 +342,8 @@ void ScreenQuad::InitConstantBuffer() {
 
 void ScreenQuad::UpdateConstantBuffer() {
 	if (D3D12* renderer = dynamic_cast<D3D12*>(this->m_renderer)) {
-		Camera* currentCamera = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera();
+		Scene* scene = m_sceneMgr->GetCurrentScene();
+		Camera* currentCamera = scene->GetCurrentCamera();
 
 		Transform cameraTransform = this->m_sceneMgr->GetCurrentScene()->GetCurrentCamera()->transform;
 		XMVECTOR eye = XMVectorSet(
@@ -374,11 +380,17 @@ void ScreenQuad::UpdateConstantBuffer() {
 		this->m_sqCBuffData.InverseProjection = XMMatrixInverse(nullptr, this->m_sqCBuffData.InverseProjection);
 
 
-		this->m_sqCBuffData.cameraPosition = XMFLOAT3(
+		this->m_sqCBuffData.cameraPosition = XMFLOAT4(
 			currentCamera->transform.location.x,
 			currentCamera->transform.location.y,
-			currentCamera->transform.location.z
+			currentCamera->transform.location.z,
+			0.f
 		);
+
+		std::vector<Light*> lights = scene->GetLights();
+		this->m_sqCBuffData.screenInfo.x = renderer->m_nWidth;
+		this->m_sqCBuffData.screenInfo.y = renderer->m_nHeight;
+		this->m_sqCBuffData.screenInfo.z = lights.size();
 
 		UINT nConstantBufferSize = (sizeof(this->m_sqCBuffData) + 255) & ~255;
 
@@ -386,9 +398,6 @@ void ScreenQuad::UpdateConstantBuffer() {
 		ThrowIfFailed(this->m_sqCBuffer->Map(0, nullptr, &pData));
 		memcpy(pData, &this->m_sqCBuffData, nConstantBufferSize);
 		this->m_sqCBuffer->Unmap(0, nullptr);
-
-		Scene* scene = m_sceneMgr->GetCurrentScene();
-		std::vector<Light*> lights = scene->GetLights();
 
 		std::vector<LightBuffer> lightArray;
 		for (Light* light : lights) {

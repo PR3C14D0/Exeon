@@ -23,8 +23,8 @@ class ResourceManager;
 struct ScreenQuadBuffer {
 	XMMATRIX InverseView;
 	XMMATRIX InverseProjection;
-	XMFLOAT3 cameraPosition;
-	XMFLOAT2 screenSize;
+	XMFLOAT4 cameraPosition;
+	XMFLOAT4 screenInfo;
 };
 
 struct SkyboxBuffer {
